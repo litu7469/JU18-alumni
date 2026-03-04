@@ -1,0 +1,78 @@
+Folder PATH listing for volume New Volume
+Volume serial number is 24BE-26CC
+E:.
+¦   file_strucure.txt
+¦   
++---backend
+¦   ¦   .env.example
+¦   ¦   alembic.ini
+¦   ¦   main.py
+¦   ¦   railway.json
+¦   ¦   requirements.txt
+¦   ¦   seed_data.py
+¦   ¦   
+¦   +---alembic
+¦   ¦   ¦   env.py
+¦   ¦   ¦   
+¦   ¦   +---versions
+¦   +---app
+¦       +---core
+¦       ¦       auth_middleware.py
+¦       ¦       config.py
+¦       ¦       database.py
+¦       ¦       security.py
+¦       ¦       
+¦       +---models
+¦       ¦       models.py
+¦       ¦       
+¦       +---routes
+¦       ¦       admin.py
+¦       ¦       auth.py
+¦       ¦       members.py
+¦       ¦       public.py
+¦       ¦       
+¦       +---schemas
+¦       ¦       schemas.py
+¦       ¦       
+¦       +---services
+¦       ¦       email_service.py
+¦       ¦       
+¦       +---{core,models,schemas,routes,services}
++---frontend
+    ¦   ADMIN_CONTENT_GUIDE.md
+    ¦   GET_STARTED.txt
+    ¦   index.html
+    ¦   ju18-GET-STARTED.txt
+    ¦   ju18-index.html
+    ¦   ju18-README.md
+    ¦   README.md
+    ¦   SETUP_GUIDE.md
+    ¦   STRUCTURE.txt
+    ¦   
+    +---admin
+    ¦       dashboard.html
+    ¦       
+    +---assets
+    ¦   +---images
+    ¦       ¦   ju-logo.png
+    ¦       ¦   README.txt
+    ¦       ¦   
+    ¦       +---slider
+    ¦               20170127_130617.jpg
+    ¦               README.txt
+    ¦               slide1.jpg
+    ¦               slider2.jpg
+    ¦               
+    +---css
+    ¦       style.css
+    ¦       
+    +---js
+    ¦       auth.js
+    ¦       main.js
+    ¦       
+    +---pages
+            dashboard.html
+            login.html
+            pending.html
+            register.html
+            

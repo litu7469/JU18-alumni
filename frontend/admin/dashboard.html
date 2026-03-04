@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — JU 18th Batch Alumni</title>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --navy: #1a3a5c; --gold: #c9a84c; --light: #f4f7fb; --white: #fff; --text: #2c3e50; --muted: #6c7a89; --border: #dde3ea; --radius: 8px; --success: #27ae60; --error: #e74c3c; --warning: #f39c12; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color: var(--text); }
+.header { background: var(--navy); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+.logo-text h1 { font-family: 'Merriweather', serif; color: var(--white); font-size: 16px; }
+.logo-text p { color: var(--gold); font-size: 11px; }
+.header-right { display: flex; align-items: center; gap: 16px; }
+.admin-badge { background: var(--gold); color: var(--navy); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.logout-btn { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: var(--white); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; }
+.layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 60px); }
+.sidebar { background: var(--white); border-right: 1px solid var(--border); padding: 20px 0; }
+.menu-item { display: flex; align-items: center; gap: 10px; padding: 11px 20px; color: var(--muted); text-decoration: none; font-size: 14px; transition: all 0.2s; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+.menu-item:hover { background: var(--light); color: var(--navy); }
+.menu-item.active { background: #e8f0f8; color: var(--navy); font-weight: 600; border-left: 3px solid var(--navy); }
+.badge { background: var(--error); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; margin-left: auto; }
+.content { padding: 28px; }
+.page-section { display: none; }
+.page-section.active { display: block; }
+.section-header { margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
+.section-header h2 { font-family: 'Merriweather', serif; font-size: 20px; color: var(--navy); }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.stat-card { background: var(--white); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); text-align: center; }
+.stat-card .value { font-size: 28px; font-weight: 700; color: var(--navy); }
+.stat-card .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.stat-card.highlight { background: var(--navy); }
+.stat-card.highlight .value, .stat-card.highlight .label { color: var(--white); }
+
+/* Table */
+.table-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.table-header h3 { font-size: 15px; font-weight: 600; color: var(--navy); }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); background: var(--light); border-bottom: 1px solid var(--border); }
+td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafbfc; }
+.status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.status-badge.pending { background: #fff3cd; color: var(--warning); }
+.status-badge.approved { background: #d4edda; color: var(--success); }
+.status-badge.rejected { background: #f8d7da; color: var(--error); }
+
+/* Buttons */
+.btn { padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; font-family: inherit; }
+.btn-approve { background: var(--success); color: white; }
+.btn-reject { background: var(--error); color: white; }
+.btn-approve:hover { background: #219a52; }
+.btn-reject:hover { background: #c0392b; }
+.btn-actions { display: flex; gap: 6px; }
+
+.alert { padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
+.alert.success { background: #eafaf1; color: var(--success); border: 1px solid #c3e6cb; }
+.alert.error { background: #fdecea; color: var(--error); border: 1px solid #f5c6c2; }
+.loading { text-align: center; padding: 40px; color: var(--muted); }
+.empty { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<header class="header">
+    <div class="logo-text"><h1>JU 18th Batch Alumni</h1><p>Admin Panel</p></div>
+    <div class="header-right">
+        <span class="admin-badge">⚙️ Admin</span>
+        <a href="/index.html" style="color:rgba(255,255,255,0.8);text-decoration:none;font-size:13px">View Site</a>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <a class="menu-item active" id="menu-overview" onclick="showSection('overview')">📊 Overview</a>
+        <a class="menu-item" id="menu-pending" onclick="showSection('pending')">⏳ Pending <span class="badge" id="pending-count">0</span></a>
+        <a class="menu-item" id="menu-members" onclick="showSection('members')">👥 All Members</a>
+        <a href="/pages/dashboard.html" class="menu-item">👤 My Profile</a>
+    </aside>
+
+    <main class="content">
+        <!-- Overview -->
+        <div class="page-section active" id="section-overview">
+            <div class="section-header"><h2>📊 Dashboard Overview</h2></div>
+            <div class="cards-grid">
+                <div class="stat-card"><div class="value" id="stat-total">—</div><div class="label">Total Members</div></div>
+                <div class="stat-card highlight"><div class="value" id="stat-pending">—</div><div class="label">Pending Approval</div></div>
+                <div class="stat-card"><div class="value" id="stat-registrations">—</div><div class="label">Total Registrations</div></div>
+                <div class="stat-card"><div class="value" id="stat-events">—</div><div class="label">Events</div></div>
+            </div>
+            <div id="overview-alert"></div>
+        </div>
+
+        <!-- Pending -->
+        <div class="page-section" id="section-pending">
+            <div class="section-header"><h2>⏳ Pending Approvals</h2></div>
+            <div id="pending-alert"></div>
+            <div class="table-card">
+                <div class="table-header"><h3>Members awaiting approval</h3></div>
+                <div id="pending-table"><div class="loading">Loading...</div></div>
+            </div>
+        </div>
+
+        <!-- All Members -->
+        <div class="page-section" id="section-members">
+            <div class="section-header"><h2>👥 All Members</h2></div>
+            <div class="table-card">
+                <div class="table-header"><h3>All registered users</h3></div>
+                <div id="members-table"><div class="loading">Loading...</div></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+const API_BASE = '';
+const token = localStorage.getItem('access_token');
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+if (!token || (user.role !== 'admin' && user.role !== 'super_admin')) {
+    window.location.href = '/pages/login.html';
+}
+
+function logout() { localStorage.clear(); window.location.href = '/pages/login.html'; }
+
+function showSection(name) {
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    document.getElementById(`section-${name}`).classList.add('active');
+    document.getElementById(`menu-${name}`).classList.add('active');
+    if (name === 'pending') loadPending();
+    if (name === 'members') loadAllMembers();
+}
+
+async function apiGet(path) {
+    const res = await fetch(`${API_BASE}${path}`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (res.status === 401) { logout(); return null; }
+    return res.json();
+}
+
+async function loadStats() {
+    const data = await apiGet('/api/admin/stats');
+    if (!data) return;
+    document.getElementById('stat-total').textContent = data.total_members;
+    document.getElementById('stat-pending').textContent = data.pending_approvals;
+    document.getElementById('stat-registrations').textContent = data.total_registrations;
+    document.getElementById('stat-events').textContent = data.total_events;
+    document.getElementById('pending-count').textContent = data.pending_approvals;
+}
+
+async function loadPending() {
+    const data = await apiGet('/api/admin/pending-members');
+    const container = document.getElementById('pending-table');
+    if (!data || data.length === 0) { container.innerHTML = '<div class="empty">🎉 No pending approvals!</div>'; return; }
+
+    container.innerHTML = `<table>
+        <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Phone</th><th>Registered</th><th>Actions</th></tr></thead>
+        <tbody>${data.map(m => `
+            <tr>
+                <td><strong>${m.full_name}</strong></td>
+                <td>${m.email}</td>
+                <td>${m.department || '—'}</td>
+                <td>${m.phone || '—'}</td>
+                <td>${new Date(m.created_at).toLocaleDateString()}</td>
+                <td>
+                    <div class="btn-actions">
+                        <button class="btn btn-approve" onclick="approve(${m.user_id}, '${m.full_name}')">✓ Approve</button>
+                        <button class="btn btn-reject" onclick="reject(${m.user_id}, '${m.full_name}')">✗ Reject</button>
+                    </div>
+                </td>
+            </tr>`).join('')}
+        </tbody></table>`;
+}
+
+async function approve(userId, name) {
+    if (!confirm(`Approve ${name}?`)) return;
+    const res = await fetch(`${API_BASE}/api/admin/approve-member`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ user_id: userId, action: 'approve' })
+    });
+    const data = await res.json();
+    const alertEl = document.getElementById('pending-alert');
+    alertEl.className = `alert ${res.ok ? 'success' : 'error'}`;
+    alertEl.textContent = res.ok ? `✅ ${name} approved and notified by email!` : (data.detail || 'Failed');
+    if (res.ok) { loadPending(); loadStats(); }
+}
+
+async function reject(userId, name) {
+    const reason = prompt(`Reason for rejecting ${name} (optional):`);
+    if (reason === null) return;
+    const res = await fetch(`${API_BASE}/api/admin/approve-member`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ user_id: userId, action: 'reject', reason })
+    });
+    const data = await res.json();
+    const alertEl = document.getElementById('pending-alert');
+    alertEl.className = `alert ${res.ok ? 'success' : 'error'}`;
+    alertEl.textContent = res.ok ? `${name} rejected.` : (data.detail || 'Failed');
+    if (res.ok) { loadPending(); loadStats(); }
+}
+
+async function loadAllMembers() {
+    const data = await apiGet('/api/admin/all-members');
+    const container = document.getElementById('members-table');
+    if (!data) return;
+    container.innerHTML = `<table>
+        <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Status</th><th>Role</th><th>Last Login</th></tr></thead>
+        <tbody>${data.map(m => `
+            <tr>
+                <td><strong>${m.full_name}</strong></td>
+                <td>${m.email}</td>
+                <td>${m.department || '—'}</td>
+                <td><span class="status-badge ${m.registration_status}">${m.registration_status}</span></td>
+                <td>${m.role}</td>
+                <td>${m.last_login ? new Date(m.last_login).toLocaleDateString() : 'Never'}</td>
+            </tr>`).join('')}
+        </tbody></table>`;
+}
+
+loadStats();
+</script>
+</body>
+</html>
