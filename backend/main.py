@@ -4,20 +4,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from app.core.config import settings
 from app.core.database import test_connection, Base, engine
-import logging
-import os
+import logging, os
 
-# ── Logging ──────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-# ── Create tables ─────────────────────────────────────────────
 Base.metadata.create_all(bind=engine)
 
-# ── FastAPI App ───────────────────────────────────────────────
 app = FastAPI(
     title="JU 18th Batch Alumni API",
     description="Jahangirnagar University 18th Batch Alumni Association",
@@ -26,8 +19,7 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
-# ── CORS ──────────────────────────────────────────────────────
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:3000").split(",")
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:8000,http://localhost:8001,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -36,19 +28,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Static files ──────────────────────────────────────────────
 os.makedirs("uploads", exist_ok=True)
-os.makedirs("../frontend", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-# ── Routers ───────────────────────────────────────────────────
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
 from app.routes import auth, members, admin, public
 app.include_router(auth.router,    prefix="/api/auth",    tags=["Auth"])
 app.include_router(members.router, prefix="/api/members", tags=["Members"])
 app.include_router(admin.router,   prefix="/api/admin",   tags=["Admin"])
 app.include_router(public.router,  prefix="/api/public",  tags=["Public"])
 
-# ── Health check ──────────────────────────────────────────────
 @app.get("/health", tags=["System"])
 def health_check():
     db_ok = test_connection()
@@ -59,24 +51,38 @@ def health_check():
         "version": "1.0.0",
     }
 
-# ── Serve frontend ────────────────────────────────────────────
 @app.get("/")
 def serve_homepage():
-    frontend_path = "../frontend/index.html"
-    if os.path.exists(frontend_path):
-        return FileResponse(frontend_path)
+    index_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
     return {"message": "JU 18th Batch Alumni API", "docs": "/api/docs"}
 
-# ── Startup ───────────────────────────────────────────────────
+@app.get("/index.html")
+def serve_index():
+    index_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return JSONResponse(status_code=404, content={"detail": "Not found"})
+
+@app.get("/pages/{page_name}")
+def serve_page(page_name: str):
+    page_path = os.path.join(FRONTEND_DIR, "pages", page_name)
+    if os.path.exists(page_path):
+        return FileResponse(page_path)
+    return JSONResponse(status_code=404, content={"detail": "Page not found"})
+@app.get("/admin/{page_name}")
+def serve_admin_page(page_name: str):
+    page_path = os.path.join(FRONTEND_DIR, "admin", page_name)
+    if os.path.exists(page_path):
+        return FileResponse(page_path)
+    return JSONResponse(status_code=404, content={"detail": "Page not found"})
+
 @app.on_event("startup")
 async def startup():
     logger.info("JU 18th Batch Alumni API starting...")
-    if test_connection():
-        logger.info("Database: OK")
-    else:
-        logger.error("Database: FAILED")
+    logger.info("Database: OK" if test_connection() else "Database: FAILED")
 
-# ── Exception handler ─────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled error: {exc}", exc_info=True)

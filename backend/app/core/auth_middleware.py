@@ -5,6 +5,8 @@ from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.models import User, UserRole, RegistrationStatus
 from jose import JWTError
+import logging
+logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 
@@ -14,10 +16,12 @@ def get_current_user(
 ) -> User:
     try:
         payload = decode_token(credentials.credentials)
-        user_id: int = payload.get("sub")
+        user_id = int(payload.get("sub"))
+        logger.info(f"Token decoded - user_id: {user_id}, payload: {payload}")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
+    except JWTError as e:
+        logger.error(f"JWTError: {e}, token: {credentials.credentials[:50]}")
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     user = db.query(User).filter(User.id == user_id).first()

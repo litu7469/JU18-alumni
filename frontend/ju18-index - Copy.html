@@ -424,19 +424,15 @@
     <header class="header">
         <div class="header-content">
             <div class="logo-section">
-                <img src="assets/images/ju-logo.png" alt="Jahangirnagar University Logo" class="university-logo">
+                <img src="https://via.placeholder.com/80x80/1e3c72/ffffff?text=JU" alt="Jahangirnagar University Logo" class="university-logo">
                 <div class="logo-text">
                     <h1>Jahangirnagar University 18th Batch Alumni Association</h1>
                     <p>জাহাঙ্গীরনগর বিশ্ববিদ্যালয় ১৮তম ব্যাচ অ্যালামনাই অ্যাসোসিয়েশন</p>
                 </div>
             </div>
-            <div class="auth-buttons" id="guest-auth">
-                <a href="http://localhost:8001/pages/register.html" class="btn btn-register">Register</a>
-                <a href="http://localhost:8001/pages/login.html" class="btn btn-login">Login</a>
-            </div>
-            <div class="auth-buttons" id="member-auth" style="display:none">
-                <a href="http://localhost:8001/pages/dashboard.html" class="btn btn-login" id="portal-link">👤 My Portal</a>
-                <a href="#" onclick="doLogout()" class="btn btn-register">Logout</a>
+            <div class="auth-buttons">
+                <a href="#register" class="btn btn-register">Register</a>
+                <a href="#login" class="btn btn-login">Login</a>
             </div>
         </div>
     </header>
@@ -446,7 +442,7 @@
         <div class="nav-content">
             <ul class="nav-menu">
                 <li class="active">
-                    <a href="#home-section">Home</a>
+                    <a href="#home">Home</a>
                 </li>
                 <li>
                     <a href="#about">About Us</a>
@@ -456,38 +452,32 @@
                         <li><a href="#committee">Executive Committee</a></li>
                     </ul>
                 </li>
-                <li id="nav-members-guest">
-                    <a href="#" onclick="requireLogin(event)">Members 🔒</a>
-                </li>
-                <li id="nav-members-auth" style="display:none">
-                    <a href="http://localhost:8001/pages/dashboard.html">Members</a>
+                <li>
+                    <a href="#members">Members</a>
                     <ul class="dropdown">
-                        <li><a href="http://localhost:8001/pages/dashboard.html">Members Directory</a></li>
-                        <li><a href="http://localhost:8001/pages/dashboard.html">Find Alumni</a></li>
-                    </ul>
-                </li>
-                <li id="nav-events-guest">
-                    <a href="#" onclick="requireLogin(event)">Events 🔒</a>
-                </li>
-                <li id="nav-events-auth" style="display:none">
-                    <a href="http://localhost:8001/pages/dashboard.html">Events</a>
-                    <ul class="dropdown">
-                        <li><a href="http://localhost:8001/pages/dashboard.html">Upcoming Events</a></li>
-                        <li><a href="http://localhost:8001/pages/dashboard.html">Photo Gallery</a></li>
-                        <li><a href="http://localhost:8001/pages/dashboard.html">Share Memories</a></li>
+                        <li><a href="#directory">Members Directory</a></li>
+                        <li><a href="#find">Find Alumni</a></li>
                     </ul>
                 </li>
                 <li>
-                    <a href="#contact-section">Contact Us</a>
+                    <a href="#events">Events</a>
+                    <ul class="dropdown">
+                        <li><a href="#upcoming">Upcoming Events</a></li>
+                        <li><a href="#gallery">Photo Gallery</a></li>
+                        <li><a href="#memories">Share Memories</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#contact">Contact Us</a>
                 </li>
             </ul>
         </div>
     </nav>
 
     <!-- Image Slider -->
-    <div id="home-section" class="slider">
+    <div class="slider">
         <div class="slide active">
-            <img src="assets/images/slider/slide1.jpg" alt="University Campus">
+            <img src="https://via.placeholder.com/1920x1080/1e3c72/ffffff?text=Welcome+to+JU+18th+Batch" alt="University Campus">
             <div class="slide-overlay">
                 <div class="slide-text">
                     <h2>Welcome to JU 18th Batch</h2>
@@ -496,7 +486,7 @@
             </div>
         </div>
         <div class="slide">
-            <img src="assets/images/slider/slide2.jpg" alt="Alumni Gathering">
+            <img src="https://via.placeholder.com/1920x1080/2a5298/ffffff?text=Together+We+Grow" alt="Alumni Gathering">
             <div class="slide-overlay">
                 <div class="slide-text">
                     <h2>Together We Grow</h2>
@@ -505,7 +495,7 @@
             </div>
         </div>
         <div class="slide">
-            <img src="assets/images/slider/slide3.jpg" alt="University Life">
+            <img src="https://via.placeholder.com/1920x1080/34495e/ffffff?text=Our+Legacy" alt="University Life">
             <div class="slide-overlay">
                 <div class="slide-text">
                     <h2>Our Legacy Continues</h2>
@@ -514,7 +504,7 @@
             </div>
         </div>
         <div class="slide">
-            <img src="assets/images/slider/slide4.jpg" alt="Campus Memories">
+            <img src="https://via.placeholder.com/1920x1080/1e3c72/ffffff?text=Forever+Connected" alt="Campus Memories">
             <div class="slide-overlay">
                 <div class="slide-text">
                     <h2>Forever Connected</h2>

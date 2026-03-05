@@ -5,51 +5,48 @@ from app.core.database import get_db
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token, generate_token, decode_token
 from app.core.auth_middleware import get_current_user
 from app.models.models import User, Member, UserRole, RegistrationStatus
-from app.schemas.schemas import RegisterRequest, LoginRequest, TokenResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest
-from app.services.email_service import send_verification_email, send_password_reset_email
+from app.schemas.schemas import LoginRequest, TokenResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest
+from app.services.email_service import send_set_password_email, send_password_reset_email
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+class RegisterRequest(BaseModel):
+    full_name: str
+    email: EmailStr
+    phone: str
+    department: str
+    password: Optional[str] = None
+
 @router.post("/register")
 def register(data: RegisterRequest, db: Session = Depends(get_db)):
-    # Check if email exists
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Create user
-    verify_token = generate_token()
     user = User(
         email=data.email,
-        password_hash=hash_password(data.password),
-        email_verify_token=verify_token,
-        email_verify_expires=datetime.utcnow() + timedelta(hours=24),
-        registration_status=RegistrationStatus.PENDING
+        password_hash=hash_password("PENDING_RESET"),
+        email_verified=True,
+        registration_status=RegistrationStatus.EMAIL_VERIFIED,
+        is_active=True,
     )
     db.add(user)
     db.flush()
 
-    # Create member profile
     member = Member(
         user_id=user.id,
         full_name=data.full_name,
-        bangla_name=data.bangla_name,
-        batch_roll=data.batch_roll,
-        department=data.department,
-        session=data.session,
         phone=data.phone,
-        profession=data.profession,
-        organization=data.organization,
+        department=data.department,
     )
     db.add(member)
     db.commit()
 
-    # Send verification email
-    send_verification_email(data.email, data.full_name, verify_token)
-
     return {
-        "message": "Registration successful! Please check your email to verify your account.",
+        "message": "Registration submitted! Awaiting admin approval.",
         "email": data.email
     }
 
@@ -59,17 +56,13 @@ def verify_email(token: str = Query(...), db: Session = Depends(get_db)):
         User.email_verify_token == token,
         User.email_verify_expires > datetime.utcnow()
     ).first()
-
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired verification link")
-
     user.email_verified = True
     user.email_verify_token = None
     user.email_verify_expires = None
     user.registration_status = RegistrationStatus.EMAIL_VERIFIED
     db.commit()
-
-    # Redirect to frontend
     from fastapi.responses import RedirectResponse
     from app.core.config import settings
     return RedirectResponse(url=f"{settings.FRONTEND_URL}/pages/login.html?verified=true")
@@ -77,23 +70,22 @@ def verify_email(token: str = Query(...), db: Session = Depends(get_db)):
 @router.post("/login", response_model=TokenResponse)
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
-
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-
     if not user.email_verified:
         raise HTTPException(status_code=401, detail="Please verify your email first")
-
     if not user.is_active:
         raise HTTPException(status_code=401, detail="Account is disabled")
+    if user.registration_status != RegistrationStatus.APPROVED and user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=401, detail="Your account is pending approval")
+    if user.password_hash == hash_password("PENDING_RESET"):
+        raise HTTPException(status_code=401, detail="Please set your password using the link sent to your email")
 
-    # Update last login
     user.last_login = datetime.utcnow()
     db.commit()
 
-    access_token = create_access_token({"sub": user.id})
-    refresh_token = create_refresh_token({"sub": user.id})
-
+    access_token = create_access_token({"sub": str(user.id)})
+    refresh_token = create_refresh_token({"sub": str(user.id)})
     member = user.member
     return TokenResponse(
         access_token=access_token,
@@ -114,12 +106,11 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
     if user:
         token = generate_token()
         user.reset_password_token = token
-        user.reset_password_expires = datetime.utcnow() + timedelta(hours=1)
+        user.reset_password_expires = datetime.utcnow() + timedelta(hours=24)
         db.commit()
         member = user.member
         name = member.full_name if member else "Alumni"
         send_password_reset_email(data.email, name, token)
-
     return {"message": "If your email is registered, you will receive a reset link shortly."}
 
 @router.post("/reset-password")
@@ -128,16 +119,13 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
         User.reset_password_token == data.token,
         User.reset_password_expires > datetime.utcnow()
     ).first()
-
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired reset link")
-
     user.password_hash = hash_password(data.new_password)
     user.reset_password_token = None
     user.reset_password_expires = None
     db.commit()
-
-    return {"message": "Password reset successful. You can now login."}
+    return {"message": "Password set successfully. You can now login."}
 
 @router.post("/change-password")
 def change_password(
@@ -147,7 +135,6 @@ def change_password(
 ):
     if not verify_password(data.current_password, current_user.password_hash):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
-
     current_user.password_hash = hash_password(data.new_password)
     db.commit()
     return {"message": "Password changed successfully"}
@@ -173,10 +160,10 @@ def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=401, detail="Invalid refresh token")
         user_id = payload.get("sub")
-        user = db.query(User).filter(User.id == user_id).first()
+        user = db.query(User).filter(User.id == int(user_id)).first()
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
-        access_token = create_access_token({"sub": user.id})
+        access_token = create_access_token({"sub": str(user.id)})
         return {"access_token": access_token, "token_type": "bearer"}
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid refresh token")

@@ -16,6 +16,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 .logo-text p { color: var(--gold); font-size: 11px; }
 .nav-links { display: flex; gap: 4px; }
 .nav-link { color: rgba(255,255,255,0.8); text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; transition: all 0.2s; }
+.nav-link.active { background: rgba(255,255,255,0.2); color: white; }
 .nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.15); color: var(--white); }
 .logout-btn { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: var(--white); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; }
 .logout-btn:hover { background: rgba(255,255,255,0.1); }
@@ -99,18 +100,29 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 <body>
 
 <header class="header">
-    <a href="/index.html" class="header-logo">
+    <a href="http://localhost:8001/index.html" class="header-logo">
         <div class="logo-text">
             <h1>JU 18th Batch Alumni</h1>
             <p>Member Portal</p>
         </div>
     </a>
     <nav class="nav-links">
-        <a href="/index.html" class="nav-link">🏠 Home</a>
-        <a href="#" class="nav-link" onclick="showSection('directory')">👥 Directory</a>
-        <a href="#" class="nav-link" onclick="showSection('events')">📅 Events</a>
+        <a href="http://localhost:8001/index.html" class="nav-link">🏠 Home</a>
+        <a href="#" class="nav-link active" onclick="showSection('home'); return false;">📊 Dashboard</a>
+        <a href="#" class="nav-link" onclick="showSection('directory'); return false;">👥 Directory</a>
+        <a href="#" class="nav-link" onclick="showSection('events'); return false;">📅 Events</a>
+        <a href="#" class="nav-link" onclick="showSection('memories'); return false;">📸 Memories</a>
     </nav>
-    <button class="logout-btn" onclick="logout()">Logout</button>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <div id="admin-btn" style="display:none">
+            <a href="http://localhost:8001/admin/dashboard.html" style="background:var(--gold);color:var(--navy);font-weight:700;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:13px;">⚙️ Admin</a>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.1); padding:5px 12px; border-radius:20px;">
+            <span style="font-size:18px;">👤</span>
+            <span id="header-username" style="color:white; font-size:13px; font-weight:600;">...</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
 </header>
 
 <div class="layout">
@@ -127,6 +139,9 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
             <a class="menu-item" id="menu-directory" onclick="showSection('directory')"><span class="menu-icon">👥</span> Directory</a>
             <a class="menu-item" id="menu-events" onclick="showSection('events')"><span class="menu-icon">📅</span> Events</a>
             <a class="menu-item" id="menu-password" onclick="showSection('password')"><span class="menu-icon">🔒</span> Change Password</a>
+            <div id="admin-panel-link" style="display:none; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px;">
+                <a href="http://localhost:8001/admin/dashboard.html" class="menu-item" style="color: var(--gold); font-weight: 600;"><span class="menu-icon">⚙️</span> Admin Panel</a>
+            </div>
         </nav>
     </aside>
 
@@ -245,24 +260,68 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
                 <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
             </div>
         </div>
+
+        <!-- Memories Section -->
+        <div class="page-section" id="section-memories">
+            <div class="section-header">
+                <h2>📸 Shared Memories</h2>
+                <button class="btn-primary" onclick="document.getElementById('memory-form').style.display='block'">+ Share Memory</button>
+            </div>
+
+            <!-- Share Memory Form -->
+            <div id="memory-form" style="display:none; background:white; border-radius:12px; border:1px solid var(--border); padding:24px; margin-bottom:24px;">
+                <h3 style="color:var(--navy); margin-bottom:16px; font-size:16px;">Share a Memory</h3>
+                <div id="memory-alert" style="display:none; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px;"></div>
+                <div style="margin-bottom:14px;">
+                    <label style="font-size:13px; font-weight:600; color:var(--text); display:block; margin-bottom:6px;">Title</label>
+                    <input type="text" id="memory-title" placeholder="Give your memory a title" style="width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:14px; outline:none;">
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="font-size:13px; font-weight:600; color:var(--text); display:block; margin-bottom:6px;">Description</label>
+                    <textarea id="memory-desc" rows="3" placeholder="Tell the story..." style="width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:14px; outline:none; resize:vertical;"></textarea>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="submitMemory()" style="padding:10px 24px; background:var(--navy); color:white; border:none; border-radius:8px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;">Share Memory</button>
+                    <button onclick="document.getElementById('memory-form').style.display='none'" style="padding:10px 24px; background:transparent; color:var(--muted); border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:14px; cursor:pointer;">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Memories List -->
+            <div id="memories-list"><div style="text-align:center; padding:48px; color:var(--muted);">Loading memories...</div></div>
+        </div>
+
     </main>
 </div>
 
 <script>
-const API_BASE = '';
+const API_BASE = 'http://localhost:8001';
 let searchTimeout;
 
 // Auth check
 const token = localStorage.getItem('access_token');
 const user = JSON.parse(localStorage.getItem('user') || '{}');
-if (!token) window.location.href = '/pages/login.html';
+if (!token) { window.location.href = 'http://localhost:8001/pages/login.html'; }
+// Set header username
+var headerName = document.getElementById('header-username');
+if (headerName && user.full_name) {
+    var firstName = user.full_name.split(' ')[0];
+    headerName.textContent = firstName;
+}
+
+// Show admin panel link if user is admin
+if (user.role === 'admin' || user.role === 'super_admin') {
+    var el = document.getElementById('admin-panel-link');
+    if (el) el.style.display = 'block';
+    var btn = document.getElementById('admin-btn');
+    if (btn) btn.style.display = 'inline-block';
+}
 if (user.registration_status !== 'approved' && user.role !== 'admin' && user.role !== 'super_admin') {
     window.location.href = '/pages/pending.html';
 }
 
 function logout() {
     localStorage.clear();
-    window.location.href = '/pages/login.html';
+    window.location.href = 'http://localhost:8001/pages/login.html';
 }
 
 function showSection(name) {
@@ -272,6 +331,7 @@ function showSection(name) {
     document.getElementById(`menu-${name}`).classList.add('active');
     if (name === 'directory') loadDirectory();
     if (name === 'events') loadEvents();
+    if (name === 'memories') loadMemories();
     if (name === 'profile') loadProfile();
 }
 
@@ -418,6 +478,63 @@ async function changePassword() {
 }
 
 init();
+
+async function loadMemories() {
+    const container = document.getElementById('memories-list');
+    try {
+        const res = await fetch(`${API_BASE}/api/members/memories`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:48px;color:var(--muted);">📸 No memories shared yet. Be the first!</div>';
+            return;
+        }
+        container.innerHTML = data.map(m => `
+            <div style="background:white;border-radius:12px;border:1px solid var(--border);padding:24px;margin-bottom:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <h3 style="color:var(--navy);font-size:16px;margin-bottom:6px;">${m.title || 'Untitled Memory'}</h3>
+                        <p style="color:var(--muted);font-size:12px;">Shared by <strong>${m.author_name || 'Alumni'}</strong> · ${new Date(m.created_at).toLocaleDateString()}</p>
+                    </div>
+                </div>
+                ${m.description ? `<p style="color:var(--text);font-size:14px;margin-top:12px;line-height:1.6;">${m.description}</p>` : ''}
+            </div>
+        `).join('');
+    } catch(e) {
+        container.innerHTML = '<div style="text-align:center;padding:48px;color:var(--muted);">Could not load memories.</div>';
+    }
+}
+
+async function submitMemory() {
+    const title = document.getElementById('memory-title').value.trim();
+    const desc = document.getElementById('memory-desc').value.trim();
+    const alert = document.getElementById('memory-alert');
+    if (!title) {
+        alert.style.display = 'block';
+        alert.style.background = '#fdecea';
+        alert.style.color = '#e74c3c';
+        alert.textContent = 'Please enter a title.';
+        return;
+    }
+    const res = await fetch(`${API_BASE}/api/members/memories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ title, description: desc })
+    });
+    if (res.ok) {
+        document.getElementById('memory-form').style.display = 'none';
+        document.getElementById('memory-title').value = '';
+        document.getElementById('memory-desc').value = '';
+        loadMemories();
+    } else {
+        alert.style.display = 'block';
+        alert.style.background = '#fdecea';
+        alert.style.color = '#e74c3c';
+        alert.textContent = 'Failed to share memory. Please try again.';
+    }
+}
+
 </script>
 </body>
 </html>

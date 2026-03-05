@@ -32,7 +32,7 @@ class User(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     last_login = Column(DateTime, nullable=True)
 
-    member = relationship("Member", back_populates="user", uselist=False)
+    member = relationship("Member", back_populates="user", uselist=False, foreign_keys="[Member.user_id]")
 
 class Member(Base):
     __tablename__ = "members"
