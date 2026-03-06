@@ -47,7 +47,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 <body>
 <header class="header">
     <div class="logo-text"><h1>JU 18th Batch</h1><p>Alumni Association</p></div>
-    <a href="http://localhost:8001/pages/login.html" class="back-link">Already registered? Login →</a>
+    <a href="https://ju18-alumni-production.up.railway.app/pages/login.html" class="back-link">Already registered? Login →</a>
 </header>
 <main class="main">
     <div class="page-title">
@@ -114,7 +114,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
                 <span class="error-msg">Please select your department</span>
             </div>
             <button class="btn-submit" id="submit-btn" onclick="submitRegistration()">Submit Registration Request</button>
-            <div class="login-row">Already have an account? <a href="http://localhost:8001/pages/login.html">Login here</a></div>
+            <div class="login-row">Already have an account? <a href="https://ju18-alumni-production.up.railway.app/pages/login.html">Login here</a></div>
         </div>
         <div class="success-screen" id="success-screen">
             <div class="icon">✅</div>
@@ -127,7 +127,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
     </div>
 </main>
 <script>
-var API_BASE = 'http://localhost:8001';
+var API_BASE = 'https://ju18-alumni-production.up.railway.app';
 function submitRegistration() {
     var full_name = document.getElementById('full_name').value.trim();
     var email = document.getElementById('email').value.trim();

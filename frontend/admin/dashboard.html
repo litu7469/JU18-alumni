@@ -76,7 +76,7 @@ tr:hover td { background: #fafbfc; }
     <div class="logo-text"><h1>JU 18th Batch Alumni</h1><p>Admin Panel</p></div>
     <div class="header-right">
         <span class="admin-badge" id="role-badge">⚙️ Admin</span>
-        <a href="http://localhost:8001/pages/dashboard.html" class="btn-header gold">👤 Member Portal</a>
+        <a href="https://ju18-alumni-production.up.railway.app/pages/dashboard.html" class="btn-header gold">👤 Member Portal</a>
         <button class="btn-header" onclick="logout()">Logout</button>
     </div>
 </header>
@@ -93,7 +93,7 @@ tr:hover td { background: #fafbfc; }
         </div>
         <a class="menu-item" id="menu-memories" onclick="showSection('memories')">📸 Memories</a>
         <hr class="divider">
-        <a href="http://localhost:8001/pages/dashboard.html" class="menu-item portal-link">🏠 Member Portal →</a>
+        <a href="https://ju18-alumni-production.up.railway.app/pages/dashboard.html" class="menu-item portal-link">🏠 Member Portal →</a>
     </aside>
 
     <main class="content">
@@ -151,7 +151,7 @@ tr:hover td { background: #fafbfc; }
 </div>
 
 <script>
-var API_BASE = 'http://localhost:8001';
+var API_BASE = 'https://ju18-alumni-production.up.railway.app';
 var token = localStorage.getItem('access_token');
 var user = JSON.parse(localStorage.getItem('user') || '{}');
 var isSuperAdmin = user.role === 'super_admin';

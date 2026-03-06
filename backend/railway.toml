@@ -1,0 +1,21 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+```
+
+**Step 3 — Go to Railway:**
+👉 https://railway.app
+- **New Project** → **Deploy from GitHub** → select `litu7469/JU18-alumni`
+- Set **Root Directory** → `backend`
+- Click **+ Add** → **PostgreSQL** database
+
+**Step 4 — Add environment variables** in Railway dashboard → Variables:
+```
+SECRET_KEY=any-long-random-string
+ALGORITHM=HS256
+GMAIL_USER=your@gmail.com
+GMAIL_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+ENVIRONMENT=production

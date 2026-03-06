@@ -100,14 +100,14 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 <body>
 
 <header class="header">
-    <a href="http://localhost:8001/index.html" class="header-logo">
+    <a href="https://ju18-alumni-production.up.railway.app/index.html" class="header-logo">
         <div class="logo-text">
             <h1>JU 18th Batch Alumni</h1>
             <p>Member Portal</p>
         </div>
     </a>
     <nav class="nav-links">
-        <a href="http://localhost:8001/index.html" class="nav-link">🏠 Home</a>
+        <a href="https://ju18-alumni-production.up.railway.app/index.html" class="nav-link">🏠 Home</a>
         <a href="#" class="nav-link active" onclick="showSection('home'); return false;">📊 Dashboard</a>
         <a href="#" class="nav-link" onclick="showSection('directory'); return false;">👥 Directory</a>
         <a href="#" class="nav-link" onclick="showSection('events'); return false;">📅 Events</a>
@@ -115,7 +115,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
     </nav>
     <div style="display:flex; align-items:center; gap:10px;">
         <div id="admin-btn" style="display:none">
-            <a href="http://localhost:8001/admin/dashboard.html" style="background:var(--gold);color:var(--navy);font-weight:700;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:13px;">⚙️ Admin</a>
+            <a href="https://ju18-alumni-production.up.railway.app/admin/dashboard.html" style="background:var(--gold);color:var(--navy);font-weight:700;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:13px;">⚙️ Admin</a>
         </div>
         <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.1); padding:5px 12px; border-radius:20px;">
             <span style="font-size:18px;">👤</span>
@@ -140,7 +140,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
             <a class="menu-item" id="menu-events" onclick="showSection('events')"><span class="menu-icon">📅</span> Events</a>
             <a class="menu-item" id="menu-password" onclick="showSection('password')"><span class="menu-icon">🔒</span> Change Password</a>
             <div id="admin-panel-link" style="display:none; border-top: 1px solid var(--border); margin-top: 8px; padding-top: 8px;">
-                <a href="http://localhost:8001/admin/dashboard.html" class="menu-item" style="color: var(--gold); font-weight: 600;"><span class="menu-icon">⚙️</span> Admin Panel</a>
+                <a href="https://ju18-alumni-production.up.railway.app/admin/dashboard.html" class="menu-item" style="color: var(--gold); font-weight: 600;"><span class="menu-icon">⚙️</span> Admin Panel</a>
             </div>
         </nav>
     </aside>
@@ -341,13 +341,13 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 </div>
 
 <script>
-const API_BASE = 'http://localhost:8001';
+const API_BASE = 'https://ju18-alumni-production.up.railway.app';
 let searchTimeout;
 
 // Auth check
 const token = localStorage.getItem('access_token');
 const user = JSON.parse(localStorage.getItem('user') || '{}');
-if (!token) { window.location.href = 'http://localhost:8001/pages/login.html'; }
+if (!token) { window.location.href = 'https://ju18-alumni-production.up.railway.app/pages/login.html'; }
 // Set header username
 var headerName = document.getElementById('header-username');
 if (headerName && user.full_name) {
@@ -368,7 +368,7 @@ if (user.registration_status !== 'approved' && user.role !== 'admin' && user.rol
 
 function logout() {
     localStorage.clear();
-    window.location.href = 'http://localhost:8001/pages/login.html';
+    window.location.href = 'https://ju18-alumni-production.up.railway.app/pages/login.html';
 }
 
 function showSection(name) {
@@ -598,7 +598,7 @@ async function loadMemories() {
             if (m.photos && m.photos.length > 0) {
                 photosHtml = '<div style="display:grid;grid-template-columns:repeat(' + Math.min(m.photos.length,3) + ',1fr);gap:8px;margin-top:12px;">' +
                     m.photos.map(function(p) {
-                        return '<img src="http://localhost:8001/uploads/' + p + '" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;cursor:pointer;background:#f4f7fb;" onclick="openPhoto(this.src)">';
+                        return '<img src="https://ju18-alumni-production.up.railway.app/uploads/' + p + '" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;cursor:pointer;background:#f4f7fb;" onclick="openPhoto(this.src)">';
                     }).join('') + '</div>';
             }
             var canDelete = (m.submitted_by === currentUserId) || currentRole === 'admin' || currentRole === 'super_admin';

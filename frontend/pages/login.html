@@ -82,7 +82,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); min-h
 </main>
 
 <script>
-var API_BASE = 'http://localhost:8001';
+var API_BASE = 'https://ju18-alumni-production.up.railway.app';
 
 var params = new URLSearchParams(window.location.search);
 if (params.get('verified') === 'true') {
@@ -90,12 +90,7 @@ if (params.get('verified') === 'true') {
 }
 
 if (localStorage.getItem('access_token')) {
-    var u = JSON.parse(localStorage.getItem('user') || '{}');
-    if (u.role === 'admin' || u.role === 'super_admin') {
-        window.location.href = API_BASE + '/admin/dashboard.html';
-    } else {
-        window.location.href = API_BASE + '/pages/dashboard.html';
-    }
+    window.location.href = API_BASE + '/admin/dashboard.html';
 }
 
 function doLogin() {
