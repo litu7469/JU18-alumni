@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from app.core.database import get_db
 from app.core.auth_middleware import get_admin_user
-from app.models.models import User, Member, UserRole, RegistrationStatus, Event
+from app.models.models import User, Member, UserRole, RegistrationStatus, Event, EventRegistration
 import csv, io
 
 router = APIRouter()
@@ -109,8 +109,8 @@ def export_events(db: Session = Depends(get_db), current_user: User = Depends(ge
     for i, e in enumerate(events, 1):
         rsvp_count = 0
         try:
-            from app.models.models import EventRSVP
-            rsvp_count = db.query(EventRSVP).filter(EventRSVP.event_id == e.id).count()
+            from app.models.models import EventRegistration
+            rsvp_count = db.query(EventRegistration).filter(EventRegistration.event_id == e.id).count()
         except:
             pass
         writer.writerow([

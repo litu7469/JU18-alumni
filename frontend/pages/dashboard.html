@@ -501,22 +501,60 @@ function searchDirectory() {
 }
 
 async function loadEvents() {
-    const data = await fetch(`${API_BASE}/api/public/events`).then(r => r.json()).catch(() => []);
     const list = document.getElementById('events-list');
-    if (!data.length) { list.innerHTML = '<div class="no-results">No events found.</div>'; return; }
-    list.innerHTML = data.map(e => `
-        <div style="background:white;border-radius:8px;padding:20px;margin-bottom:16px;border:1px solid var(--border);display:flex;gap:20px;align-items:start">
-            <div style="min-width:60px;text-align:center;background:var(--navy);color:white;border-radius:8px;padding:10px">
-                <div style="font-size:20px;font-weight:700">${new Date(e.event_date).getDate()}</div>
-                <div style="font-size:11px">${new Date(e.event_date).toLocaleString('default',{month:'short'})}</div>
+    list.innerHTML = '<div class="loading">Loading events...</div>';
+    const res = await fetch(`${API_BASE}/api/events`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) { list.innerHTML = '<div class="no-results">Failed to load events.</div>'; return; }
+    const data = await res.json();
+    if (!data.length) { list.innerHTML = '<div class="no-results">No upcoming events. Check back soon!</div>'; return; }
+    const typeColors = { reunion: '#e8f0ff', seminar: '#e8fff0', cultural: '#fff5e8', sports: '#ffe8e8', general: '#f4f7fb' };
+    list.innerHTML = data.map(e => {
+        const d = new Date(e.event_date);
+        const isPast = d < new Date();
+        return `<div style="background:white;border-radius:12px;border:1px solid var(--border);margin-bottom:16px;overflow:hidden;">
+            <div style="display:flex;gap:0;align-items:stretch;">
+                <div style="min-width:70px;text-align:center;background:${isPast ? '#95a5a6' : 'var(--navy)'};color:white;padding:16px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                    <div style="font-size:24px;font-weight:700;line-height:1;">${d.getDate()}</div>
+                    <div style="font-size:12px;opacity:0.85;">${d.toLocaleString('default',{month:'short'})}</div>
+                    <div style="font-size:11px;opacity:0.7;">${d.getFullYear()}</div>
+                </div>
+                <div style="padding:16px;flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+                        <div>
+                            <div style="font-weight:700;font-size:15px;color:var(--navy);">${e.title}</div>
+                            <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap;">
+                                ${e.venue ? `<span style="font-size:12px;color:var(--muted);">📍 ${e.venue}</span>` : ''}
+                                ${e.event_time ? `<span style="font-size:12px;color:var(--muted);">🕐 ${e.event_time}</span>` : ''}
+                                <span style="font-size:11px;background:${typeColors[e.event_type]||'#f4f7fb'};padding:2px 8px;border-radius:10px;color:var(--navy);">${e.event_type || 'general'}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:12px;color:var(--muted);">👥 ${e.rsvp_count} attending</span>
+                            ${e.is_rsvp_enabled && !isPast ? `<button id="rsvp-btn-${e.id}" onclick="toggleRSVP(${e.id})" style="padding:6px 14px;background:${e.user_rsvpd ? '#e8f5e9' : 'var(--gold)'};color:${e.user_rsvpd ? '#27ae60' : '#1a3a5c'};border:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">${e.user_rsvpd ? '✅ Going' : '+ RSVP'}</button>` : ''}
+                            ${isPast ? '<span style="font-size:11px;color:#95a5a6;background:#f0f0f0;padding:4px 10px;border-radius:10px;">Past</span>' : ''}
+                        </div>
+                    </div>
+                    ${e.description ? `<div style="font-size:13px;margin-top:10px;color:var(--text);line-height:1.5;">${e.description}</div>` : ''}
+                </div>
             </div>
-            <div>
-                <div style="font-weight:600;font-size:15px;color:var(--navy)">${e.title}</div>
-                ${e.location ? `<div style="color:var(--muted);font-size:13px;margin-top:4px">📍 ${e.location}</div>` : ''}
-                ${e.description ? `<div style="font-size:13px;margin-top:8px;color:var(--text)">${e.description}</div>` : ''}
-            </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
+}
+
+async function toggleRSVP(eventId) {
+    const btn = document.getElementById(`rsvp-btn-${eventId}`);
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+    const res = await fetch(`${API_BASE}/api/events/${eventId}/rsvp`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (res.ok) {
+        loadEvents();
+    } else {
+        alert(data.detail || 'RSVP failed');
+        if (btn) { btn.disabled = false; btn.textContent = '+ RSVP'; }
+    }
 }
 
 async function changePassword() {
@@ -750,6 +788,25 @@ async function uploadProfilePhoto(input) {
         status.textContent = '❌ Upload failed. Try again.';
         status.style.color = '#e74c3c';
     }
+}
+
+
+async function loadAnnouncementsBar() {
+    const res = await fetch(`${API_BASE}/api/announcements`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.length) return;
+    const colors = { urgent: '#fdecea', important: '#fff8e8', normal: '#e8f0ff' };
+    const borders = { urgent: '#e74c3c', important: '#f39c12', normal: '#2980b9' };
+    const icons = { urgent: '🚨', important: '⚠️', normal: '📢' };
+    const bar = document.getElementById('announcements-bar');
+    if (bar) bar.innerHTML = data.slice(0,3).map(a => `
+        <div style="background:${colors[a.priority]||colors.normal};border-left:4px solid ${borders[a.priority]||borders.normal};padding:12px 20px;margin-bottom:8px;border-radius:0 8px 8px 0;">
+            <strong>${icons[a.priority]||'📢'} ${a.title}</strong>
+            <span style="font-size:13px;color:#555;margin-left:8px;">${a.body}</span>
+            <span style="font-size:11px;color:#999;margin-left:8px;">${new Date(a.created_at).toLocaleDateString()}</span>
+        </div>
+    `).join('');
 }
 
 </script>

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional, List
 from app.core.database import get_db
 from app.core.auth_middleware import get_approved_member, get_admin_user
-from app.models.models import User, Event, Member
+from app.models.models import User, Event, Member, EventRegistration
 from pydantic import BaseModel
 import shutil, uuid, os
 
@@ -38,12 +38,12 @@ def format_event(e, db, current_user_id=None):
         rsvp_count = len(e.rsvps) if e.rsvps else 0
     # Check RSVP table
     try:
-        from app.models.models import EventRSVP
-        rsvp_count = db.query(EventRSVP).filter(EventRSVP.event_id == e.id).count()
+        from app.models.models import EventRegistration
+        rsvp_count = db.query(EventRegistration).filter(EventRegistration.event_id == e.id).count()
         if current_user_id:
-            user_rsvpd = db.query(EventRSVP).filter(
-                EventRSVP.event_id == e.id,
-                EventRSVP.user_id == current_user_id
+            user_rsvpd = db.query(EventRegistration).filter(
+                EventRegistration.event_id == e.id,
+                EventRegistration.user_id == current_user_id
             ).first() is not None
     except:
         pass
@@ -53,9 +53,9 @@ def format_event(e, db, current_user_id=None):
         "description": getattr(e, 'description', None),
         "event_date": str(e.event_date) if e.event_date else None,
         "event_time": str(getattr(e, 'event_time', None) or ''),
-        "venue": getattr(e, 'venue', None),
+        "venue": getattr(e, 'venue', None) or getattr(e, 'location', None),
         "event_type": getattr(e, 'event_type', 'general'),
-        "is_rsvp_enabled": getattr(e, 'is_rsvp_enabled', True),
+        "is_rsvp_enabled": getattr(e, 'is_rsvp_enabled', None) if hasattr(e, 'is_rsvp_enabled') else getattr(e, 'registration_required', True),
         "max_attendees": getattr(e, 'max_attendees', None),
         "is_published": getattr(e, 'is_published', True),
         "banner_image": getattr(e, 'banner_image', None),
@@ -89,10 +89,10 @@ def toggle_rsvp(event_id: int, db: Session = Depends(get_db), current_user: User
     if not getattr(e, 'is_rsvp_enabled', True):
         raise HTTPException(status_code=400, detail="RSVP not enabled for this event")
     try:
-        from app.models.models import EventRSVP
-        existing = db.query(EventRSVP).filter(
-            EventRSVP.event_id == event_id,
-            EventRSVP.user_id == current_user.id
+        from app.models.models import EventRegistration
+        existing = db.query(EventRegistration).filter(
+            EventRegistration.event_id == event_id,
+            EventRegistration.user_id == current_user.id
         ).first()
         if existing:
             db.delete(existing)
@@ -101,10 +101,10 @@ def toggle_rsvp(event_id: int, db: Session = Depends(get_db), current_user: User
         else:
             max_att = getattr(e, 'max_attendees', None)
             if max_att:
-                count = db.query(EventRSVP).filter(EventRSVP.event_id == event_id).count()
+                count = db.query(EventRegistration).filter(EventRegistration.event_id == event_id).count()
                 if count >= max_att:
                     raise HTTPException(status_code=400, detail="Event is full")
-            rsvp = EventRSVP(event_id=event_id, user_id=current_user.id, created_at=datetime.utcnow())
+            rsvp = EventRegistration(event_id=event_id, user_id=current_user.id, created_at=datetime.utcnow())
             db.add(rsvp)
             db.commit()
             return {"message": "RSVP confirmed", "rsvpd": True}
@@ -126,14 +126,15 @@ def create_event(data: EventCreate, db: Session = Depends(get_db), current_user:
         title=data.title,
         description=data.description,
         event_date=datetime.strptime(data.event_date, "%Y-%m-%d").date(),
-        event_time=data.event_time,
-        venue=data.venue,
+        event_time=data.event_time if hasattr(Event, 'event_time') else None,
+        location=data.venue,
         event_type=data.event_type or 'general',
-        is_rsvp_enabled=data.is_rsvp_enabled,
+        registration_required=data.is_rsvp_enabled,
         max_attendees=data.max_attendees,
         is_published=True,
         created_by=current_user.id,
         created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
     )
     db.add(event)
     db.commit()
@@ -145,11 +146,14 @@ def update_event(event_id: int, data: EventUpdate, db: Session = Depends(get_db)
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
+    field_map = {"venue": "location", "is_rsvp_enabled": "registration_required"}
     for key, value in data.dict(exclude_unset=True).items():
         if key == 'event_date' and value:
             value = datetime.strptime(value, "%Y-%m-%d").date()
-        if hasattr(event, key):
-            setattr(event, key, value)
+        actual_key = field_map.get(key, key)
+        if hasattr(event, actual_key):
+            setattr(event, actual_key, value)
+    event.updated_at = datetime.utcnow()
     db.commit()
     return {"message": "Event updated!"}
 
@@ -165,8 +169,8 @@ def delete_event(event_id: int, db: Session = Depends(get_db), current_user: Use
 @router.get("/admin/{event_id}/attendees")
 def get_attendees(event_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_admin_user)):
     try:
-        from app.models.models import EventRSVP
-        rsvps = db.query(EventRSVP).filter(EventRSVP.event_id == event_id).all()
+        from app.models.models import EventRegistration
+        rsvps = db.query(EventRegistration).filter(EventRegistration.event_id == event_id).all()
         result = []
         for r in rsvps:
             member = db.query(Member).filter(Member.user_id == r.user_id).first()
