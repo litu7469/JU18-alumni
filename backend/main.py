@@ -31,21 +31,18 @@ app.add_middleware(
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-# Try multiple possible frontend paths (local vs Railway)
+# Locate frontend directory relative to this file
+# On Railway: main.py is at /app/main.py, frontend is at /app/frontend
+# On local:   main.py is at backend/main.py, frontend is at ../frontend
+_base = os.path.dirname(os.path.abspath(__file__))
 _possible_frontend_dirs = [
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend"),  # local: ../frontend
-    "/app/../frontend",                                                                        # Railway: backend is /app
-    os.path.join(os.getcwd(), "..", "frontend"),                                              # cwd/../frontend
-    os.path.join(os.getcwd(), "frontend"),                                                    # cwd/frontend
-    "/frontend",                                                                               # root /frontend
+    os.path.join(_base, "frontend"),            # Railway: /app/frontend
+    os.path.join(_base, "..", "frontend"),       # local: backend/../frontend
 ]
-# Resolve symlinks and normalize
 _possible_frontend_dirs = [os.path.normpath(d) for d in _possible_frontend_dirs]
 FRONTEND_DIR = next((d for d in _possible_frontend_dirs if os.path.isdir(d)), None)
-logger.info(f"CWD: {os.getcwd()}")
-logger.info(f"__file__: {os.path.abspath(__file__)}")
+logger.info(f"Base dir: {_base}")
 logger.info(f"Frontend dir found: {FRONTEND_DIR}")
-logger.info(f"Paths tried: {_possible_frontend_dirs}")
 if FRONTEND_DIR and os.path.exists(FRONTEND_DIR):
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
     assets_dir = os.path.join(FRONTEND_DIR, "assets")
