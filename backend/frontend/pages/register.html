@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — JU 18th Batch Alumni</title>
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --navy: #1a3a5c; --gold: #c9a84c; --light: #f4f7fb; --white: #fff; --text: #2c3e50; --muted: #6c7a89; --error: #e74c3c; --success: #27ae60; --border: #dde3ea; --radius: 8px; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color: var(--text); min-height: 100vh; }
+.header { background: var(--navy); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+.logo-text h1 { font-family: 'Merriweather', serif; color: var(--white); font-size: 18px; }
+.logo-text p { color: var(--gold); font-size: 12px; }
+.back-link { color: var(--gold); text-decoration: none; font-size: 14px; }
+.main { max-width: 560px; margin: 48px auto; padding: 0 20px 60px; }
+.page-title { text-align: center; margin-bottom: 32px; }
+.page-title h2 { font-family: 'Merriweather', serif; font-size: 26px; color: var(--navy); }
+.page-title p { color: var(--muted); margin-top: 8px; font-size: 14px; line-height: 1.6; }
+.form-card { background: var(--white); border-radius: 12px; padding: 40px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
+.form-title { font-family: 'Merriweather', serif; font-size: 15px; color: var(--navy); margin-bottom: 24px; padding-bottom: 10px; border-bottom: 2px solid var(--gold); }
+.info-box { background: #f0f6ff; border: 1px solid #c8deff; border-radius: var(--radius); padding: 14px 16px; margin-bottom: 24px; font-size: 13px; color: #2c5282; line-height: 1.7; }
+.info-box strong { display: block; margin-bottom: 4px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--text); }
+.field label .req { color: var(--error); }
+.field input, .field select { padding: 11px 14px; border: 1.5px solid var(--border); border-radius: var(--radius); font-family: inherit; font-size: 14px; color: var(--text); outline: none; transition: border-color 0.2s; background: var(--white); }
+.field input:focus, .field select:focus { border-color: var(--navy); }
+.field .hint { font-size: 11px; color: var(--muted); }
+.field.error input, .field.error select { border-color: var(--error); }
+.field .error-msg { font-size: 11px; color: var(--error); display: none; }
+.field.error .error-msg { display: block; }
+.btn-submit { width: 100%; padding: 13px; background: var(--navy); color: var(--white); border: none; border-radius: var(--radius); font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+.btn-submit:hover { background: #122840; }
+.btn-submit:disabled { background: var(--muted); cursor: not-allowed; }
+.alert { padding: 12px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 20px; display: none; }
+.alert.error { background: #fdecea; color: var(--error); border: 1px solid #f5c6c2; display: block; }
+.login-row { text-align: center; margin-top: 20px; font-size: 14px; color: var(--muted); }
+.login-row a { color: var(--navy); font-weight: 600; text-decoration: none; }
+.success-screen { text-align: center; padding: 32px 16px; display: none; }
+.success-screen .icon { font-size: 56px; margin-bottom: 16px; }
+.success-screen h3 { font-family: 'Merriweather', serif; font-size: 22px; color: var(--navy); margin-bottom: 16px; }
+.success-screen p { color: var(--muted); line-height: 1.7; margin-bottom: 8px; font-size: 14px; }
+.success-screen .email-highlight { font-weight: 600; color: var(--navy); font-size: 15px; }
+</style>
+</head>
+<body>
+<header class="header">
+    <div class="logo-text"><h1>JU 18th Batch</h1><p>Alumni Association</p></div>
+    <a href="https://ju18-alumni-production.up.railway.app/pages/login.html" class="back-link">Already registered? Login →</a>
+</header>
+<main class="main">
+    <div class="page-title">
+        <h2>Alumni Registration</h2>
+        <p>Join the JU 18th Batch Alumni network</p>
+    </div>
+    <div class="form-card">
+        <div id="alert" class="alert"></div>
+        <div id="reg-form">
+            <div class="info-box">
+                <strong>ℹ️ How it works</strong>
+                1. Fill in your details and submit.<br>
+                2. Admin reviews and approves your request.<br>
+                3. You receive an email with a link to set your password.<br>
+                4. Set your password and access the alumni portal!
+            </div>
+            <div class="form-title">Your Information</div>
+            <div class="field" id="f-full_name">
+                <label>Full Name <span class="req">*</span></label>
+                <input type="text" id="full_name" placeholder="Your full name">
+                <span class="error-msg">Full name is required</span>
+            </div>
+            <div class="field" id="f-email">
+                <label>Email Address <span class="req">*</span></label>
+                <input type="email" id="email" placeholder="your@email.com">
+                <span class="hint">You will receive approval notification on this email</span>
+                <span class="error-msg">Valid email address is required</span>
+            </div>
+            <div class="field" id="f-phone">
+                <label>Phone Number <span class="req">*</span></label>
+                <input type="tel" id="phone" placeholder="+880-XXX-XXXXXXX">
+                <span class="error-msg">Phone number is required</span>
+            </div>
+            <div class="field" id="f-department">
+                <label>Department <span class="req">*</span></label>
+                <select id="department">
+                    <option value="">Select your department</option>
+                    <option>Mathematics</option>
+                    <option>Physics</option>
+                    <option>Chemistry</option>
+                    <option>Statistics</option>
+                    <option>Computer Science & Engineering</option>
+                    <option>Geography & Environment</option>
+                    <option>Economics</option>
+                    <option>Bangla</option>
+                    <option>English</option>
+                    <option>History</option>
+                    <option>Philosophy</option>
+                    <option>International Relations</option>
+                    <option>Government & Politics</option>
+                    <option>Public Administration</option>
+                    <option>Anthropology</option>
+                    <option>Archaeology</option>
+                    <option>Fine Arts</option>
+                    <option>Drama & Dramatics</option>
+                    <option>Pharmacy</option>
+                    <option>Biotechnology & Genetic Engineering</option>
+                    <option>Biochemistry & Molecular Biology</option>
+                    <option>Microbiology</option>
+                    <option>Zoology</option>
+                    <option>Botany</option>
+                    <option>Other</option>
+                </select>
+                <span class="error-msg">Please select your department</span>
+            </div>
+            <button class="btn-submit" id="submit-btn" onclick="submitRegistration()">Submit Registration Request</button>
+            <div class="login-row">Already have an account? <a href="https://ju18-alumni-production.up.railway.app/pages/login.html">Login here</a></div>
+        </div>
+        <div class="success-screen" id="success-screen">
+            <div class="icon">✅</div>
+            <h3>Registration Submitted!</h3>
+            <p>Your request has been received for</p>
+            <p class="email-highlight" id="success-email"></p>
+            <br>
+            <p>An admin will review your request shortly.<br>Once approved, you will receive an email with a link to <strong>set your password</strong> and access the alumni portal.</p>
+        </div>
+    </div>
+</main>
+<script>
+var API_BASE = 'https://ju18-alumni-production.up.railway.app';
+function submitRegistration() {
+    var full_name = document.getElementById('full_name').value.trim();
+    var email = document.getElementById('email').value.trim();
+    var phone = document.getElementById('phone').value.trim();
+    var department = document.getElementById('department').value;
+    var valid = true;
+    if (!full_name) { document.getElementById('f-full_name').classList.add('error'); valid = false; } else document.getElementById('f-full_name').classList.remove('error');
+    if (!email || !/\S+@\S+\.\S+/.test(email)) { document.getElementById('f-email').classList.add('error'); valid = false; } else document.getElementById('f-email').classList.remove('error');
+    if (!phone) { document.getElementById('f-phone').classList.add('error'); valid = false; } else document.getElementById('f-phone').classList.remove('error');
+    if (!department) { document.getElementById('f-department').classList.add('error'); valid = false; } else document.getElementById('f-department').classList.remove('error');
+    if (!valid) return;
+    var btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    document.getElementById('alert').className = 'alert';
+    fetch(API_BASE + '/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name: full_name, email: email, phone: phone, department: department })
+    })
+    .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
+    .then(function(result) {
+        if (result.ok) {
+            document.getElementById('success-email').textContent = email;
+            document.getElementById('reg-form').style.display = 'none';
+            document.getElementById('alert').style.display = 'none';
+            document.getElementById('success-screen').style.display = 'block';
+        } else {
+            var alertEl = document.getElementById('alert');
+            alertEl.className = 'alert error';
+            alertEl.textContent = result.data.detail || 'Registration failed. Please try again.';
+            btn.disabled = false;
+            btn.textContent = 'Submit Registration Request';
+        }
+    })
+    .catch(function() {
+        var alertEl = document.getElementById('alert');
+        alertEl.className = 'alert error';
+        alertEl.textContent = 'Network error. Please check your connection.';
+        btn.disabled = false;
+        btn.textContent = 'Submit Registration Request';
+    });
+}
+</script>
+</body>
+</html>
