@@ -47,8 +47,9 @@
         }
 
         .logo-text h1 {
-            font-size: 1.8rem;
-            margin-bottom: 0.3rem;
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
         }
 
         .logo-text p {
@@ -424,7 +425,7 @@
     <header class="header">
         <div class="header-content">
             <div class="logo-section">
-                <img src="assets/images/ju-logo.png" alt="Jahangirnagar University Logo" class="university-logo">
+                <img src="http://localhost:8001/assets/images/ju-logo.png" alt="Jahangirnagar University Logo" class="university-logo">
                 <div class="logo-text">
                     <h1>Jahangirnagar University 18th Batch Alumni Association</h1>
                     <p>জাহাঙ্গীরনগর বিশ্ববিদ্যালয় ১৮তম ব্যাচ অ্যালামনাই অ্যাসোসিয়েশন</p>
@@ -434,9 +435,14 @@
                 <a href="http://localhost:8001/pages/register.html" class="btn btn-register">Register</a>
                 <a href="http://localhost:8001/pages/login.html" class="btn btn-login">Login</a>
             </div>
-            <div class="auth-buttons" id="member-auth" style="display:none">
-                <a href="http://localhost:8001/pages/dashboard.html" class="btn btn-login" id="portal-link">👤 My Portal</a>
-                <a href="#" onclick="doLogout()" class="btn btn-register">Logout</a>
+            <div class="auth-buttons" id="member-auth" style="display:none; align-items:center; gap:10px;">
+                <!-- Profile pic + name -->
+                <a href="http://localhost:8001/pages/dashboard.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+                    <div id="member-avatar" style="width:36px;height:36px;border-radius:50%;background:#c9a84c;display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;border:2px solid rgba(255,255,255,0.6);flex-shrink:0;">👤</div>
+                    <span id="member-name" style="font-size:15px;font-weight:700;color:white;letter-spacing:0.3px;"></span>
+                </a>
+                <a href="http://localhost:8001/pages/dashboard.html" id="portal-link" style="padding:6px 14px;background:#c9a84c;color:#1a3a5c;font-weight:700;font-size:13px;border-radius:5px;text-decoration:none;white-space:nowrap;">My Portal</a>
+                <a href="#" onclick="doLogout()" style="padding:6px 14px;background:#ff6b6b;color:white;font-weight:700;font-size:13px;border-radius:5px;text-decoration:none;">Logout</a>
             </div>
         </div>
     </header>
@@ -487,7 +493,7 @@
     <!-- Image Slider -->
     <div id="home-section" class="slider">
         <div class="slide active">
-            <img src="assets/images/slider/slide1.jpg" alt="University Campus">
+            <img src="http://localhost:8001/assets/images/slider/slide1.jpg" alt="University Campus">
             <div class="slide-overlay">
                 <div class="slide-text">
                     <h2>Welcome to JU 18th Batch</h2>
@@ -496,7 +502,7 @@
             </div>
         </div>
         <div class="slide">
-            <img src="assets/images/slider/slide2.jpg" alt="Alumni Gathering">
+            <img src="http://localhost:8001/assets/images/slider/slide2.jpg" alt="Alumni Gathering">
             <div class="slide-overlay">
                 <div class="slide-text">
                     <h2>Together We Grow</h2>
@@ -505,7 +511,7 @@
             </div>
         </div>
         <div class="slide">
-            <img src="assets/images/slider/slide3.jpg" alt="University Life">
+            <img src="http://localhost:8001/assets/images/slider/slide3.jpg" alt="University Life">
             <div class="slide-overlay">
                 <div class="slide-text">
                     <h2>Our Legacy Continues</h2>
@@ -514,7 +520,7 @@
             </div>
         </div>
         <div class="slide">
-            <img src="assets/images/slider/slide4.jpg" alt="Campus Memories">
+            <img src="http://localhost:8001/assets/images/slider/slide4.jpg" alt="Campus Memories">
             <div class="slide-overlay">
                 <div class="slide-text">
                     <h2>Forever Connected</h2>
@@ -618,3 +624,99 @@
                     const dropdown = this.querySelector('.dropdown');
                     if (dropdown) {
                 
+                    }
+                }
+            });
+        });
+    </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var token = localStorage.getItem("access_token");
+    var user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    if (token && user.email) {
+        var guestAuth = document.getElementById("guest-auth");
+        var memberAuth = document.getElementById("member-auth");
+        if (guestAuth) guestAuth.style.display = "none";
+        if (memberAuth) memberAuth.style.display = "flex";
+
+        var membersGuest = document.getElementById("nav-members-guest");
+        var membersAuth = document.getElementById("nav-members-auth");
+        if (membersGuest) membersGuest.style.display = "none";
+        if (membersAuth) membersAuth.style.display = "block";
+
+        var eventsGuest = document.getElementById("nav-events-guest");
+        var eventsAuth = document.getElementById("nav-events-auth");
+        if (eventsGuest) eventsGuest.style.display = "none";
+        if (eventsAuth) eventsAuth.style.display = "block";
+
+        var memberName = document.getElementById("member-name");
+        if (memberName && user.full_name) {
+            memberName.textContent = user.full_name.split(" ")[0];
+        }
+        // Load profile photo into avatar
+        var memberAvatar = document.getElementById("member-avatar");
+        if (memberAvatar) {
+            if (user.profile_photo) {
+                memberAvatar.innerHTML = '<img src="http://localhost:8001/uploads/' + user.profile_photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+            } else {
+                // Fetch from API to get latest profile photo
+                fetch("http://localhost:8001/api/members/profile", {
+                    headers: { "Authorization": "Bearer " + token }
+                }).then(function(r) { return r.json(); }).then(function(p) {
+                    if (p.profile_photo) {
+                        memberAvatar.innerHTML = '<img src="http://localhost:8001/uploads/' + p.profile_photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+                        // Update stored user
+                        user.profile_photo = p.profile_photo;
+                        localStorage.setItem("user", JSON.stringify(user));
+                    }
+                }).catch(function(){});
+            }
+        }
+        // Update portal link for admins
+        var portalLink = document.getElementById("portal-link");
+        if (portalLink && (user.role === "admin" || user.role === "super_admin")) {
+            portalLink.textContent = "⚙️ Admin Panel";
+            portalLink.style.background = "#c9a84c";
+            portalLink.href = "http://localhost:8001/admin/dashboard.html";
+        }
+
+
+    }
+});
+
+function doLogout() { localStorage.clear(); window.location.reload(); }
+
+function requireLogin(e) {
+    e.preventDefault();
+    if (confirm("Please login to access this section. Go to login page?")) {
+        window.location.href = "http://localhost:8001/pages/login.html";
+    }
+}
+
+function sendContactForm() {
+    var name = document.getElementById("contact-name").value.trim();
+    var email = document.getElementById("contact-email").value.trim();
+    var subject = document.getElementById("contact-subject").value.trim();
+    var message = document.getElementById("contact-message").value.trim();
+    var alertEl = document.getElementById("contact-alert");
+    if (!name || !email || !subject || !message) {
+        alertEl.style.display = "block";
+        alertEl.style.background = "#fdecea";
+        alertEl.style.color = "#e74c3c";
+        alertEl.textContent = "Please fill in all fields.";
+        return;
+    }
+    alertEl.style.display = "block";
+    alertEl.style.background = "#eafaf1";
+    alertEl.style.color = "#27ae60";
+    alertEl.textContent = "✅ Thank you! Your message has been received.";
+    document.getElementById("contact-name").value = "";
+    document.getElementById("contact-email").value = "";
+    document.getElementById("contact-subject").value = "";
+    document.getElementById("contact-message").value = "";
+}
+</script>
+</body>
+</html>

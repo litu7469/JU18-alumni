@@ -34,6 +34,40 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 if os.path.exists(FRONTEND_DIR):
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+    # Serve assets, pages, admin directly from frontend root
+    assets_dir = os.path.join(FRONTEND_DIR, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+    pages_dir = os.path.join(FRONTEND_DIR, "pages")
+    if os.path.exists(pages_dir):
+        app.mount("/pages", StaticFiles(directory=pages_dir), name="pages")
+    admin_dir = os.path.join(FRONTEND_DIR, "admin")
+    if os.path.exists(admin_dir):
+        app.mount("/admin", StaticFiles(directory=admin_dir), name="admin")
+    # Mount assets folder directly so relative paths work from index.html
+    assets_dir = os.path.join(FRONTEND_DIR, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+    # Mount pages and admin folders
+    pages_dir = os.path.join(FRONTEND_DIR, "pages")
+    if os.path.exists(pages_dir):
+        app.mount("/pages-static", StaticFiles(directory=pages_dir), name="pages-static")
+    # Also serve assets directly so relative paths like assets/images/... work
+    assets_dir = os.path.join(FRONTEND_DIR, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+    # Serve assets folder directly at /assets
+    ASSETS_DIR = os.path.join(FRONTEND_DIR, "assets")
+    if os.path.exists(ASSETS_DIR):
+        app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
+    # Serve pages folder at /pages
+    PAGES_DIR = os.path.join(FRONTEND_DIR, "pages")
+    if os.path.exists(PAGES_DIR):
+        app.mount("/pages", StaticFiles(directory=PAGES_DIR), name="pages")
+    # Serve admin folder at /admin
+    ADMIN_DIR = os.path.join(FRONTEND_DIR, "admin")
+    if os.path.exists(ADMIN_DIR):
+        app.mount("/admin", StaticFiles(directory=ADMIN_DIR), name="admin_static")
 
 from app.routes import auth, members, admin, public
 app.include_router(auth.router,    prefix="/api/auth",    tags=["Auth"])

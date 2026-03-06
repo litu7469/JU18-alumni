@@ -91,6 +91,7 @@ tr:hover td { background: #fafbfc; }
             <div class="sidebar-section">Super Admin</div>
             <a class="menu-item" id="menu-admins" onclick="showSection('admins')">🔑 Manage Admins</a>
         </div>
+        <a class="menu-item" id="menu-memories" onclick="showSection('memories')">📸 Memories</a>
         <hr class="divider">
         <a href="http://localhost:8001/pages/dashboard.html" class="menu-item portal-link">🏠 Member Portal →</a>
     </aside>
@@ -124,6 +125,16 @@ tr:hover td { background: #fafbfc; }
             <div class="table-card">
                 <div class="table-header"><h3>All registered users</h3></div>
                 <div id="members-table"><div class="loading">Loading...</div></div>
+            </div>
+        </div>
+
+        <!-- Memories -->
+        <div class="page-section" id="section-memories">
+            <div class="section-header"><h2>📸 Shared Memories</h2></div>
+            <div id="admin-memories-alert"></div>
+            <div class="table-card">
+                <div class="table-header"><h3>All member memories</h3></div>
+                <div id="admin-memories-table"><div class="loading">Loading...</div></div>
             </div>
         </div>
 
@@ -170,6 +181,7 @@ function showSection(name) {
     if (name === 'pending') loadPending();
     if (name === 'members') loadAllMembers();
     if (name === 'admins') loadAdmins();
+    if (name === 'memories') loadAdminMemories();
 }
 
 function apiRequest(path, options) {
@@ -222,7 +234,39 @@ function approveMember(userId, name) {
         if (!result) return;
         alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
         alertEl.textContent = result.ok ? '✅ ' + name + ' approved! Set-password email sent.' : (result.data.detail || 'Failed');
-        if (result.ok) { loadPending(); loadStats(); }
+        if (result.ok) { loadPending(); async function loadAdminMemories() {
+    const container = document.getElementById('admin-memories-table');
+    container.innerHTML = '<div class="loading">Loading...</div>';
+    const result = await apiRequest('/api/members/memories');
+    if (!result) return;
+    const data = result.data;
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty">No memories shared yet.</div>';
+        return;
+    }
+    container.innerHTML = '<table><thead><tr><th>Title</th><th>Shared By</th><th>Description</th><th>Photos</th><th>Date</th><th>Action</th></tr></thead><tbody>' +
+        data.map(function(m) {
+            var photoCount = m.photos ? m.photos.length : 0;
+            return '<tr><td><strong>' + m.title + '</strong></td>' +
+                '<td>' + (m.author_name || '—') + '</td>' +
+                '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (m.description || '—') + '</td>' +
+                '<td>' + (photoCount > 0 ? '📷 ' + photoCount + ' photo(s)' : '—') + '</td>' +
+                '<td>' + new Date(m.created_at).toLocaleDateString() + '</td>' +
+                '<td><button class="btn btn-reject" onclick="adminDeleteMemory(' + m.id + ')">🗑 Delete</button></td></tr>';
+        }).join('') + '</tbody></table>';
+}
+
+async function adminDeleteMemory(id) {
+    if (!confirm('Delete this memory permanently?')) return;
+    const result = await apiRequest('/api/members/memories/' + id, { method: 'DELETE' });
+    const alertEl = document.getElementById('admin-memories-alert');
+    if (!result) return;
+    alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
+    alertEl.textContent = result.ok ? '✅ Memory deleted.' : (result.data.detail || 'Failed');
+    if (result.ok) loadAdminMemories();
+}
+
+loadStats(); }
     });
 }
 
@@ -238,7 +282,39 @@ function rejectMember(userId, name) {
         if (!result) return;
         alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
         alertEl.textContent = result.ok ? name + ' rejected.' : (result.data.detail || 'Failed');
-        if (result.ok) { loadPending(); loadStats(); }
+        if (result.ok) { loadPending(); async function loadAdminMemories() {
+    const container = document.getElementById('admin-memories-table');
+    container.innerHTML = '<div class="loading">Loading...</div>';
+    const result = await apiRequest('/api/members/memories');
+    if (!result) return;
+    const data = result.data;
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty">No memories shared yet.</div>';
+        return;
+    }
+    container.innerHTML = '<table><thead><tr><th>Title</th><th>Shared By</th><th>Description</th><th>Photos</th><th>Date</th><th>Action</th></tr></thead><tbody>' +
+        data.map(function(m) {
+            var photoCount = m.photos ? m.photos.length : 0;
+            return '<tr><td><strong>' + m.title + '</strong></td>' +
+                '<td>' + (m.author_name || '—') + '</td>' +
+                '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (m.description || '—') + '</td>' +
+                '<td>' + (photoCount > 0 ? '📷 ' + photoCount + ' photo(s)' : '—') + '</td>' +
+                '<td>' + new Date(m.created_at).toLocaleDateString() + '</td>' +
+                '<td><button class="btn btn-reject" onclick="adminDeleteMemory(' + m.id + ')">🗑 Delete</button></td></tr>';
+        }).join('') + '</tbody></table>';
+}
+
+async function adminDeleteMemory(id) {
+    if (!confirm('Delete this memory permanently?')) return;
+    const result = await apiRequest('/api/members/memories/' + id, { method: 'DELETE' });
+    const alertEl = document.getElementById('admin-memories-alert');
+    if (!result) return;
+    alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
+    alertEl.textContent = result.ok ? '✅ Memory deleted.' : (result.data.detail || 'Failed');
+    if (result.ok) loadAdminMemories();
+}
+
+loadStats(); }
     });
 }
 
@@ -292,6 +368,38 @@ function changeRole(userId, newRole, name) {
         alertEl.textContent = result.ok ? '✅ Role updated for ' + name : (result.data.detail || 'Failed');
         if (result.ok) loadAdmins();
     });
+}
+
+async function loadAdminMemories() {
+    const container = document.getElementById('admin-memories-table');
+    container.innerHTML = '<div class="loading">Loading...</div>';
+    const result = await apiRequest('/api/members/memories');
+    if (!result) return;
+    const data = result.data;
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty">No memories shared yet.</div>';
+        return;
+    }
+    container.innerHTML = '<table><thead><tr><th>Title</th><th>Shared By</th><th>Description</th><th>Photos</th><th>Date</th><th>Action</th></tr></thead><tbody>' +
+        data.map(function(m) {
+            var photoCount = m.photos ? m.photos.length : 0;
+            return '<tr><td><strong>' + m.title + '</strong></td>' +
+                '<td>' + (m.author_name || '—') + '</td>' +
+                '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (m.description || '—') + '</td>' +
+                '<td>' + (photoCount > 0 ? '📷 ' + photoCount + ' photo(s)' : '—') + '</td>' +
+                '<td>' + new Date(m.created_at).toLocaleDateString() + '</td>' +
+                '<td><button class="btn btn-reject" onclick="adminDeleteMemory(' + m.id + ')">🗑 Delete</button></td></tr>';
+        }).join('') + '</tbody></table>';
+}
+
+async function adminDeleteMemory(id) {
+    if (!confirm('Delete this memory permanently?')) return;
+    const result = await apiRequest('/api/members/memories/' + id, { method: 'DELETE' });
+    const alertEl = document.getElementById('admin-memories-alert');
+    if (!result) return;
+    alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
+    alertEl.textContent = result.ok ? '✅ Memory deleted.' : (result.data.detail || 'Failed');
+    if (result.ok) loadAdminMemories();
 }
 
 loadStats();
