@@ -1,6 +1,7 @@
 [build]
 builder = "nixpacks"
+buildCommand = "cd backend && pip install -r requirements.txt"
 
 [deploy]
-startCommand = "alembic upgrade head && python -c \"from app.core.database import SessionLocal; from app.models.models import User, UserRole, RegistrationStatus; from app.core.security import hash_password; from datetime import datetime; db = SessionLocal(); existing = db.query(User).filter(User.email == 'admin@ju18alumni.org').first(); db.add(User(email='admin@ju18alumni.org', password_hash=hash_password('Admin@2026'), role=UserRole.SUPER_ADMIN, registration_status=RegistrationStatus.APPROVED, created_at=datetime.utcnow())) if not existing else None; db.commit(); db.close(); print('Admin OK!')\" && uvicorn main:app --host 0.0.0.0 --port $PORT"
+startCommand = "cd backend && alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
