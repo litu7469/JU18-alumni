@@ -71,29 +71,34 @@ def health_check():
 
 @app.get("/")
 def serve_homepage():
-    index_path = os.path.join(FRONTEND_DIR, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return {"message": "JU 18th Batch Alumni API", "docs": "/api/docs"}
+    if FRONTEND_DIR:
+        index_path = os.path.join(FRONTEND_DIR, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+    return {"message": "JU 18th Batch Alumni API", "docs": "/api/docs", "frontend_dir": str(FRONTEND_DIR)}
 
 @app.get("/index.html")
 def serve_index():
-    index_path = os.path.join(FRONTEND_DIR, "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
+    if FRONTEND_DIR:
+        index_path = os.path.join(FRONTEND_DIR, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
     return JSONResponse(status_code=404, content={"detail": "Not found"})
 
 @app.get("/pages/{page_name}")
 def serve_page(page_name: str):
-    page_path = os.path.join(FRONTEND_DIR, "pages", page_name)
-    if os.path.exists(page_path):
-        return FileResponse(page_path)
+    if FRONTEND_DIR:
+        page_path = os.path.join(FRONTEND_DIR, "pages", page_name)
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
     return JSONResponse(status_code=404, content={"detail": "Page not found"})
+
 @app.get("/admin/{page_name}")
 def serve_admin_page(page_name: str):
-    page_path = os.path.join(FRONTEND_DIR, "admin", page_name)
-    if os.path.exists(page_path):
-        return FileResponse(page_path)
+    if FRONTEND_DIR:
+        page_path = os.path.join(FRONTEND_DIR, "admin", page_name)
+        if os.path.exists(page_path):
+            return FileResponse(page_path)
     return JSONResponse(status_code=404, content={"detail": "Page not found"})
 
 @app.on_event("startup")
