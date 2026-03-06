@@ -55,11 +55,15 @@ if FRONTEND_DIR and os.path.exists(FRONTEND_DIR):
     if os.path.exists(admin_dir):
         app.mount("/admin", StaticFiles(directory=admin_dir), name="admin_static")
 
-from app.routes import auth, members, admin, public
-app.include_router(auth.router,    prefix="/api/auth",    tags=["Auth"])
-app.include_router(members.router, prefix="/api/members", tags=["Members"])
-app.include_router(admin.router,   prefix="/api/admin",   tags=["Admin"])
-app.include_router(public.router,  prefix="/api/public",  tags=["Public"])
+from app.routes import auth, members, admin, public, events, bulk_email, reports, announcements
+app.include_router(auth.router,          prefix="/api/auth",          tags=["Auth"])
+app.include_router(members.router,       prefix="/api/members",       tags=["Members"])
+app.include_router(admin.router,         prefix="/api/admin",         tags=["Admin"])
+app.include_router(public.router,        prefix="/api/public",        tags=["Public"])
+app.include_router(events.router,        prefix="/api/events",        tags=["Events"])
+app.include_router(bulk_email.router,    prefix="/api/email",         tags=["Bulk Email"])
+app.include_router(reports.router,       prefix="/api/reports",       tags=["Reports"])
+app.include_router(announcements.router, prefix="/api/announcements", tags=["Announcements"])
 
 @app.get("/health", tags=["System"])
 def health_check():
