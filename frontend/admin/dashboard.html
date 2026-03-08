@@ -343,8 +343,6 @@ if (isSuperAdmin) {
     document.getElementById('role-badge').textContent = '⚙️ Super Admin';
 }
 
-// Set initial active section
-showSection('overview');
 
 function logout() { localStorage.clear(); window.location.href = API_BASE + '/pages/login.html'; }
 
@@ -671,11 +669,8 @@ async function viewAttendees(id, title) {
     if (!result || !result.ok) return;
     const attendees = result.data;
     const msg = attendees.length === 0 ? 'No RSVPs yet.' :
-        attendees.map((a,i) => `${i+1}. ${a.full_name} - ${a.department || ''} - ${a.phone || ''}`).join('
-');
-    alert(`RSVPs for "${title}" (${attendees.length}):
-
-${msg}`);
+        attendees.map((a,i) => `${i+1}. ${a.full_name} - ${a.department || ''} - ${a.phone || ''}`).join('\n');
+    alert('RSVPs for "' + title + '" (' + attendees.length + '):\n\n' + msg);
 }
 
 // ═══ ANNOUNCEMENTS ═══
@@ -767,8 +762,7 @@ async function sendBulkEmail() {
         recipient_type: type,
         department: document.getElementById('email-dept').value || null,
         hall: document.getElementById('email-hall').value || null,
-        custom_emails: type === 'custom' ? document.getElementById('email-custom').value.split('
-').map(e=>e.trim()).filter(Boolean) : null,
+        custom_emails: type === 'custom' ? document.getElementById('email-custom').value.split('\n').map(e=>e.trim()).filter(Boolean) : null,
     };
     showAlert('email-alert', 'info', '⏳ Sending emails...');
     const result = await apiRequest('/api/email/send', { method: 'POST', body: JSON.stringify(payload) });
