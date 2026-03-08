@@ -110,35 +110,9 @@ def serve_admin_page(page_name: str):
 
 @app.get("/test-email")
 def test_email():
-    import os
-    gmail_user = os.getenv("GMAIL_USER", "NOT SET")
-    gmail_pass = os.getenv("GMAIL_APP_PASSWORD", "NOT SET")
-    frontend_url = os.getenv("FRONTEND_URL", "NOT SET")
-    from_name = os.getenv("FROM_NAME", "NOT SET")
-    
-    # Try sending
-    try:
-        import smtplib
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(gmail_user, gmail_pass)
-            server.sendmail(gmail_user, gmail_user, "Subject: Test\n\nTest email from Railway")
-        return {
-            "status": "email sent!",
-            "gmail_user": gmail_user,
-            "frontend_url": frontend_url,
-            "from_name": from_name,
-        }
-    except Exception as e:
-        return {
-            "status": "FAILED",
-            "error": str(e),
-            "gmail_user": gmail_user[:5] + "***" if gmail_user != "NOT SET" else "NOT SET",
-            "frontend_url": frontend_url,
-            "from_name": from_name,
-        }
+    from app.services.email_service import send_email
+    result = send_email("dhakadose@gmail.com", "Test from Railway", "<b>Email via Brevo works!</b>")
+    return {"status": "sent" if result else "FAILED"}
 
 @app.on_event("startup")
 async def startup():
