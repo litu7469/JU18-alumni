@@ -4,853 +4,633 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard — JU 18th Batch Alumni</title>
-<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root { --navy: #1a3a5c; --gold: #c9a84c; --light: #f4f7fb; --white: #fff; --text: #2c3e50; --muted: #6c7a89; --border: #dde3ea; --radius: 8px; --success: #27ae60; --error: #e74c3c; --warning: #f39c12; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color: var(--text); }
-.header { background: var(--navy); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; }
-.logo-text h1 { font-family: 'Merriweather', serif; color: var(--white); font-size: 16px; }
-.logo-text p { color: var(--gold); font-size: 11px; }
-.header-right { display: flex; align-items: center; gap: 12px; }
-.admin-badge { background: var(--gold); color: var(--navy); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-.btn-header { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: var(--white); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; text-decoration: none; display: inline-block; }
-.btn-header:hover { background: rgba(255,255,255,0.1); }
-.btn-header.gold { background: var(--gold); color: var(--navy); border-color: var(--gold); font-weight: 600; }
-.btn-header.gold:hover { background: #b8962e; }
-.layout { display: grid; grid-template-columns: 230px 1fr; min-height: calc(100vh - 60px); }
-.sidebar { background: var(--white); border-right: 1px solid var(--border); padding: 16px 0; }
-.sidebar-section { padding: 8px 16px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 8px; }
-.menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--muted); text-decoration: none; font-size: 14px; transition: all 0.15s; cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
-.menu-item:hover { background: var(--light); color: var(--navy); }
-.menu-item.active { background: #e8f0f8; color: var(--navy); font-weight: 600; border-left: 3px solid var(--navy); }
-.menu-item.portal-link { color: var(--gold); font-weight: 600; border-top: 1px solid var(--border); margin-top: 8px; }
-.menu-item.portal-link:hover { background: #fff8e8; }
-.badge { background: var(--error); color: white; font-size: 10px; padding: 2px 7px; border-radius: 10px; margin-left: auto; }
-.content { padding: 28px; overflow-y: auto; }
-.page-section { display: none; }
-.page-section.active { display: block; }
-.section-header { margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
-.section-header h2 { font-family: 'Merriweather', serif; font-size: 20px; color: var(--navy); }
-.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
-.stat-card { background: var(--white); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); text-align: center; }
-.stat-card.clickable { cursor: pointer; transition: all 0.2s; }
-.stat-card.clickable:hover { border-color: var(--navy); box-shadow: 0 2px 12px rgba(26,58,92,0.12); transform: translateY(-1px); }
-.stat-card .value { font-size: 28px; font-weight: 700; color: var(--navy); }
-.stat-card .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
-.stat-card.pending-highlight { border: 2px solid var(--error); }
-.table-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
-.table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.table-header h3 { font-size: 15px; font-weight: 600; color: var(--navy); }
+body { font-family: 'Segoe UI', sans-serif; background: #f4f7fb; display: flex; flex-direction: column; min-height: 100vh; }
+/* Header */
+.header { background: #1a3a5c; color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.header h1 { font-size: 16px; font-weight: 700; }
+.header p { font-size: 11px; color: #c9a84c; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.btn-sm { padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; }
+.btn-gold { background: #c9a84c; color: #1a3a5c; }
+.btn-outline { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.4); }
+.btn-outline:hover { background: rgba(255,255,255,0.1); }
+/* Layout */
+.layout { display: flex; flex: 1; }
+/* Sidebar */
+.sidebar { width: 200px; background: white; border-right: 1px solid #e8ecf0; padding: 16px 0; flex-shrink: 0; }
+.sidebar-label { font-size: 10px; font-weight: 700; color: #95a5a6; text-transform: uppercase; letter-spacing: 1px; padding: 12px 16px 4px; }
+.menu-item { display: block; padding: 10px 16px; color: #555; text-decoration: none; font-size: 13px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s; }
+.menu-item:hover { background: #f4f7fb; color: #1a3a5c; }
+.menu-item.active { background: #eaf0f8; color: #1a3a5c; border-left-color: #1a3a5c; font-weight: 600; }
+.badge { background: #e74c3c; color: white; border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 6px; }
+hr.divider { border: none; border-top: 1px solid #eee; margin: 8px 0; }
+/* Main */
+.main { flex: 1; padding: 24px; overflow-y: auto; }
+.section { display: none; }
+.section.active { display: block; }
+.section-title { font-size: 20px; font-weight: 700; color: #1a3a5c; margin-bottom: 20px; }
+/* Cards */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; }
+.stat-card .num { font-size: 32px; font-weight: 800; color: #1a3a5c; }
+.stat-card .lbl { font-size: 12px; color: #7f8c8d; margin-top: 4px; }
+/* Table */
+.card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 20px; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+.card-header h3 { font-size: 15px; color: #1a3a5c; font-weight: 600; }
 table { width: 100%; border-collapse: collapse; }
-th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); background: var(--light); border-bottom: 1px solid var(--border); }
-td { padding: 13px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+th { background: #f8f9fa; padding: 10px 16px; text-align: left; font-size: 12px; color: #7f8c8d; font-weight: 600; text-transform: uppercase; }
+td { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; font-size: 13px; color: #444; }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: #fafbfc; }
-.status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.status-badge.email_verified, .status-badge.pending { background: #fff3cd; color: var(--warning); }
-.status-badge.approved { background: #d4edda; color: var(--success); }
-.status-badge.rejected { background: #f8d7da; color: var(--error); }
-.role-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #e8f0f8; color: var(--navy); }
-.role-badge.super_admin { background: var(--navy); color: var(--gold); }
-.role-badge.admin { background: var(--gold); color: var(--navy); }
-.btn { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; font-family: inherit; }
-.btn-approve { background: var(--success); color: white; }
-.btn-reject { background: var(--error); color: white; }
-.btn-promote { background: var(--gold); color: var(--navy); }
-.btn-demote { background: var(--muted); color: white; }
-.btn-approve:hover { background: #219a52; }
-.btn-reject:hover { background: #c0392b; }
-.btn-promote:hover { background: #b8962e; }
-.btn-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.alert { padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
-.alert.success { background: #eafaf1; color: var(--success); border: 1px solid #c3e6cb; }
-.alert.error { background: #fdecea; color: var(--error); border: 1px solid #f5c6c2; }
-.loading { text-align: center; padding: 40px; color: var(--muted); }
-.empty { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
-.divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+/* Buttons */
+.btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; }
+.btn-primary { background: #1a3a5c; color: white; }
+.btn-primary:hover { background: #2a5298; }
+.btn-success { background: #27ae60; color: white; }
+.btn-danger { background: #e74c3c; color: white; }
+.btn-warning { background: #f39c12; color: white; }
+.btn-secondary { background: #95a5a6; color: white; }
+/* Form */
+.form-group { margin-bottom: 16px; }
+label { display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 6px; }
+input, select, textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: #1a3a5c; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* Alert */
+.alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+.alert.success { background: #eafaf1; color: #27ae60; border: 1px solid #a9dfbf; }
+.alert.error { background: #fdecea; color: #e74c3c; border: 1px solid #f5c6c2; }
+.alert.info { background: #e8f0f8; color: #1a3a5c; border: 1px solid #b8d0e8; }
+/* Modal */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+.modal-backdrop.show { display: flex; }
+.modal { background: white; border-radius: 16px; padding: 28px; width: 90%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+.modal h3 { color: #1a3a5c; margin-bottom: 20px; font-size: 17px; }
+.empty { text-align: center; padding: 40px; color: #95a5a6; font-size: 14px; }
+#admin-hidden { display: none; }
 </style>
 </head>
 <body>
+
 <header class="header">
-    <div class="logo-text"><h1>JU 18th Batch Alumni</h1><p>Admin Panel</p></div>
-    <div class="header-right">
-        <span class="admin-badge" id="role-badge">⚙️ Admin</span>
-        <a href="https://ju18-alumni-production.up.railway.app/pages/dashboard.html" class="btn-header gold">👤 Member Portal</a>
-        <button class="btn-header" onclick="logout()">Logout</button>
-    </div>
+  <div>
+    <h1>JU 18th Batch Alumni</h1>
+    <p>Admin Panel</p>
+  </div>
+  <div class="header-right">
+    <span id="admin-name" style="color:#c9a84c;font-size:13px;font-weight:600;"></span>
+    <button class="btn-sm btn-gold" onclick="window.location.href='/pages/dashboard.html'">Member Portal</button>
+    <button class="btn-sm btn-outline" onclick="logout()">Logout</button>
+  </div>
 </header>
 
 <div class="layout">
-    <aside class="sidebar">
-        <div class="sidebar-section">Administration</div>
-        <a class="menu-item" id="menu-overview" onclick="showSection('overview')">📊 Overview</a>
-        <a class="menu-item" id="menu-pending" onclick="showSection('pending')">⏳ Pending <span class="badge" id="pending-count">0</span></a>
-        <a class="menu-item" id="menu-members" onclick="showSection('members')">👥 All Members</a>
-        <div id="admin-mgmt-section" style="display:none">
-            <div class="sidebar-section">Super Admin</div>
-            <a class="menu-item" id="menu-admins" onclick="showSection('admins')">🔑 Manage Admins</a>
+  <aside class="sidebar">
+    <div class="sidebar-label">Administration</div>
+    <a class="menu-item active" id="menu-overview" onclick="showSection('overview')">📊 Overview</a>
+    <a class="menu-item" id="menu-pending" onclick="showSection('pending')">⏳ Pending <span class="badge" id="pending-count">0</span></a>
+    <a class="menu-item" id="menu-members" onclick="showSection('members')">👥 All Members</a>
+    <a class="menu-item" id="menu-memories" onclick="showSection('memories')">📸 Memories</a>
+    <div id="admin-hidden">
+      <hr class="divider">
+      <div class="sidebar-label">Super Admin</div>
+      <a class="menu-item" id="menu-admins" onclick="showSection('admins')">🔑 Manage Admins</a>
+    </div>
+    <hr class="divider">
+    <div class="sidebar-label">Stage 3</div>
+    <a class="menu-item" id="menu-events" onclick="showSection('events')">📅 Events</a>
+    <a class="menu-item" id="menu-announcements" onclick="showSection('announcements')">📢 Announcements</a>
+    <a class="menu-item" id="menu-bulkemail" onclick="showSection('bulkemail')">✉️ Bulk Email</a>
+    <a class="menu-item" id="menu-reports" onclick="showSection('reports')">📊 Reports</a>
+  </aside>
+
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <div class="section active" id="section-overview">
+      <div class="section-title">Overview</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="num" id="stat-total">-</div><div class="lbl">Total Members</div></div>
+        <div class="stat-card"><div class="num" id="stat-pending">-</div><div class="lbl">Pending</div></div>
+        <div class="stat-card"><div class="num" id="stat-approved">-</div><div class="lbl">Approved</div></div>
+        <div class="stat-card"><div class="num" id="stat-events">-</div><div class="lbl">Events</div></div>
+      </div>
+    </div>
+
+    <!-- PENDING -->
+    <div class="section" id="section-pending">
+      <div class="section-title">Pending Registrations</div>
+      <div class="card">
+        <div id="pending-list"><div class="empty">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- ALL MEMBERS -->
+    <div class="section" id="section-members">
+      <div class="section-title">All Members</div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Members</h3>
+          <input type="text" id="member-search" placeholder="Search..." style="width:200px;" oninput="filterMembers()">
         </div>
-        <a class="menu-item" id="menu-memories" onclick="showSection('memories')">📸 Memories</a>
-        <div class="sidebar-section">Stage 3</div>
-        <a class="menu-item" id="menu-events" onclick="showSection('events')">📅 Events</a>
-        <a class="menu-item" id="menu-announcements" onclick="showSection('announcements')">📢 Announcements</a>
-        <a class="menu-item" id="menu-bulkemail" onclick="showSection('bulkemail')">✉️ Bulk Email</a>
-        <a class="menu-item" id="menu-reports" onclick="showSection('reports')">📊 Reports</a>
-        <hr class="divider">
-        <a href="https://ju18-alumni-production.up.railway.app/pages/dashboard.html" class="menu-item portal-link">🏠 Member Portal →</a>
-    </aside>
+        <div id="members-list"><div class="empty">Loading...</div></div>
+      </div>
+    </div>
 
-    <main class="content">
-        <!-- Overview -->
-        <div class="page-section" id="section-overview">
-            <div class="section-header"><h2>📊 Dashboard Overview</h2></div>
-            <div class="cards-grid">
-                <div class="stat-card clickable" onclick="showSection('members')"><div class="value" id="stat-total">—</div><div class="label">Approved Members</div></div>
-                <div class="stat-card clickable" id="card-pending" onclick="showSection('pending')"><div class="value" id="stat-pending" style="color:var(--error)">—</div><div class="label">Pending Approval</div></div>
-                <div class="stat-card clickable" onclick="showSection('members')"><div class="value" id="stat-registrations">—</div><div class="label">Total Registrations</div></div>
-                <div class="stat-card"><div class="value" id="stat-events">—</div><div class="label">Events</div></div>
-            </div>
+    <!-- MEMORIES -->
+    <div class="section" id="section-memories">
+      <div class="section-title">Memories</div>
+      <div class="card">
+        <div id="memories-list"><div class="empty">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- ADMINS -->
+    <div class="section" id="section-admins">
+      <div class="section-title">Manage Admins</div>
+      <div class="card">
+        <div id="admins-list"><div class="empty">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="section" id="section-events">
+      <div class="section-title">Events</div>
+      <div class="card" style="padding:20px;margin-bottom:20px;">
+        <h3 style="margin-bottom:16px;color:#1a3a5c;" id="event-form-title">Create Event</h3>
+        <div id="event-alert" class="alert"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Title</label><input type="text" id="ev-title"></div>
+          <div class="form-group"><label>Date</label><input type="date" id="ev-date"></div>
         </div>
-
-        <!-- Pending -->
-        <div class="page-section" id="section-pending">
-            <div class="section-header"><h2>⏳ Pending Approvals</h2></div>
-            <div id="pending-alert"></div>
-            <div class="table-card">
-                <div class="table-header"><h3>Members awaiting approval</h3></div>
-                <div id="pending-table"><div class="loading">Loading...</div></div>
-            </div>
+        <div class="form-row">
+          <div class="form-group"><label>Time</label><input type="time" id="ev-time"></div>
+          <div class="form-group"><label>Location</label><input type="text" id="ev-location"></div>
         </div>
-
-        <!-- All Members -->
-        <div class="page-section" id="section-members">
-            <div class="section-header"><h2>👥 All Members</h2></div>
-            <div id="members-alert"></div>
-            <div class="table-card">
-                <div class="table-header"><h3>All registered users</h3></div>
-                <div id="members-table"><div class="loading">Loading...</div></div>
-            </div>
+        <div class="form-group"><label>Description</label><textarea id="ev-desc" rows="3"></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>Max Attendees</label><input type="number" id="ev-max" placeholder="0 = unlimited"></div>
+          <div class="form-group"><label>Type</label>
+            <select id="ev-type">
+              <option value="general">General</option>
+              <option value="reunion">Reunion</option>
+              <option value="seminar">Seminar</option>
+              <option value="cultural">Cultural</option>
+            </select>
+          </div>
         </div>
-
-        <!-- Memories -->
-        <div class="page-section" id="section-memories">
-            <div class="section-header"><h2>📸 Shared Memories</h2></div>
-            <div id="admin-memories-alert"></div>
-            <div class="table-card">
-                <div class="table-header"><h3>All member memories</h3></div>
-                <div id="admin-memories-table"><div class="loading">Loading...</div></div>
-            </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
+          <button class="btn btn-secondary" onclick="cancelEventForm()">Cancel</button>
         </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>All Events</h3></div>
+        <div id="events-list"><div class="empty">Loading...</div></div>
+      </div>
+    </div>
 
-        <!-- Manage Admins (super_admin only) -->
-        <div class="page-section" id="section-admins">
-            <div class="section-header"><h2>🔑 Manage Admins</h2></div>
-            <div id="admins-alert"></div>
-            <div class="table-card">
-                <div class="table-header"><h3>Promote or demote admin roles</h3></div>
-                <div id="admins-table"><div class="loading">Loading...</div></div>
-            </div>
+    <!-- ANNOUNCEMENTS -->
+    <div class="section" id="section-announcements">
+      <div class="section-title">Announcements</div>
+      <div class="card" style="padding:20px;margin-bottom:20px;">
+        <h3 style="margin-bottom:16px;color:#1a3a5c;">Post Announcement</h3>
+        <div id="ann-alert" class="alert"></div>
+        <div class="form-group"><label>Title</label><input type="text" id="ann-title"></div>
+        <div class="form-group"><label>Content</label><textarea id="ann-content" rows="4"></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>Expires At (optional)</label><input type="date" id="ann-expires"></div>
+          <div class="form-group"><label>Options</label>
+            <label style="font-weight:normal;margin-top:8px;display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="ann-pinned" style="width:auto;"> Pin this announcement
+            </label>
+          </div>
         </div>
+        <button class="btn btn-primary" onclick="postAnnouncement()">Post Announcement</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>All Announcements</h3></div>
+        <div id="announcements-list"><div class="empty">Loading...</div></div>
+      </div>
+    </div>
 
-        <!-- ═══ EVENTS SECTION ═══ -->
-        <div class="page-section" id="section-events">
-            <div class="section-header">
-                <h2>📅 Event Management</h2>
-                <button class="btn btn-primary" onclick="document.getElementById('event-form-wrap').style.display='block'">+ Create Event</button>
-            </div>
-            <div id="event-alert" class="alert" style="display:none"></div>
-
-            <!-- Create/Edit Form -->
-            <div id="event-form-wrap" style="display:none; background:white; border-radius:12px; border:1px solid var(--border); padding:24px; margin-bottom:24px;">
-                <h3 id="event-form-title" style="color:var(--navy); margin-bottom:20px; font-size:16px;">Create New Event</h3>
-                <input type="hidden" id="event-edit-id">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
-                    <div><label style="font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Title *</label><input type="text" id="ev-title" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></div>
-                    <div><label style="font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Event Type</label>
-                        <select id="ev-type" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
-                            <option value="general">General</option>
-                            <option value="reunion">Reunion</option>
-                            <option value="seminar">Seminar</option>
-                            <option value="cultural">Cultural</option>
-                            <option value="sports">Sports</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div><label style="font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Date *</label><input type="date" id="ev-date" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></div>
-                    <div><label style="font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Time</label><input type="time" id="ev-time" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></div>
-                    <div><label style="font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Venue</label><input type="text" id="ev-venue" placeholder="Location / Online" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></div>
-                    <div><label style="font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Max Attendees</label><input type="number" id="ev-max" placeholder="Leave blank for unlimited" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></div>
-                </div>
-                <div style="margin-bottom:16px;"><label style="font-size:12px;font-weight:600;color:var(--text);display:block;margin-bottom:6px;">Description</label><textarea id="ev-desc" rows="3" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;"></textarea></div>
-                <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;">
-                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;"><input type="checkbox" id="ev-rsvp" checked> Enable RSVP</label>
-                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;"><input type="checkbox" id="ev-published" checked> Published</label>
-                </div>
-                <div style="display:flex;gap:10px;">
-                    <button onclick="saveEvent()" style="padding:10px 24px;background:var(--navy);color:white;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">Save Event</button>
-                    <button onclick="cancelEventForm()" style="padding:10px 24px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;">Cancel</button>
-                </div>
-            </div>
-
-            <div class="table-card">
-                <div id="events-table"><div class="loading">Loading events...</div></div>
-            </div>
+    <!-- BULK EMAIL -->
+    <div class="section" id="section-bulkemail">
+      <div class="section-title">Bulk Email</div>
+      <div class="card" style="padding:20px;">
+        <div id="email-alert" class="alert"></div>
+        <div class="form-group"><label>Recipients</label>
+          <select id="email-type" onchange="toggleEmailOptions()">
+            <option value="all">All Members</option>
+            <option value="department">By Department</option>
+            <option value="hall">By Hall</option>
+            <option value="custom">Custom Emails</option>
+          </select>
         </div>
-
-        <!-- ═══ ANNOUNCEMENTS SECTION ═══ -->
-        <div class="page-section" id="section-announcements">
-            <div class="section-header"><h2>📢 Announcements</h2></div>
-            <div id="ann-alert" class="alert" style="display:none"></div>
-            <div style="background:white;border-radius:12px;border:1px solid var(--border);padding:24px;margin-bottom:24px;">
-                <h3 style="color:var(--navy);margin-bottom:16px;font-size:16px;">New Announcement</h3>
-                <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Title *</label><input type="text" id="ann-title" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></div>
-                <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Message *</label><textarea id="ann-body" rows="4" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;"></textarea></div>
-                <div style="margin-bottom:16px;display:flex;gap:20px;align-items:center;">
-                    <div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Priority</label>
-                        <select id="ann-priority" style="padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
-                            <option value="normal">Normal</option>
-                            <option value="important">Important</option>
-                            <option value="urgent">🚨 Urgent</option>
-                        </select>
-                    </div>
-                    <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-top:16px;"><input type="checkbox" id="ann-email"> Also send as email to all members</label>
-                </div>
-                <button onclick="postAnnouncement()" style="padding:10px 28px;background:var(--navy);color:white;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">📢 Post Announcement</button>
-            </div>
-            <div class="table-card">
-                <div class="table-header"><h3>All Announcements</h3></div>
-                <div id="ann-list"><div class="loading">Loading...</div></div>
-            </div>
+        <div id="email-dept-group" class="form-group" style="display:none;">
+          <label>Department</label>
+          <input type="text" id="email-dept" placeholder="e.g. CSE">
         </div>
-
-        <!-- ═══ BULK EMAIL SECTION ═══ -->
-        <div class="page-section" id="section-bulkemail">
-            <div class="section-header"><h2>✉️ Bulk Email</h2></div>
-            <div id="email-alert" class="alert" style="display:none"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
-                <div style="background:white;border-radius:12px;border:1px solid var(--border);padding:24px;">
-                    <h3 style="color:var(--navy);margin-bottom:20px;font-size:16px;">Compose Email</h3>
-                    <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Recipients</label>
-                        <select id="email-recipient-type" onchange="updateRecipientOptions()" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
-                            <option value="all">All Approved Members</option>
-                            <option value="department">By Department</option>
-                            <option value="hall">By Hall</option>
-                            <option value="custom">Custom Emails</option>
-                        </select>
-                    </div>
-                    <div id="email-dept-wrap" style="display:none;margin-bottom:14px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Department</label><input type="text" id="email-dept" placeholder="e.g. Statistics" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></div>
-                    <div id="email-hall-wrap" style="display:none;margin-bottom:14px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Hall</label>
-                        <select id="email-hall" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
-                            <option value="">Select Hall</option>
-                            <option>Al-Beruni Hall</option><option>SSB Hall</option><option>MH Hall</option>
-                            <option>Kamal Uddin Hall</option><option>NF Hall</option><option>FN Hall</option>
-                        </select>
-                    </div>
-                    <div id="email-custom-wrap" style="display:none;margin-bottom:14px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Email Addresses (one per line)</label><textarea id="email-custom" rows="3" placeholder="email1@gmail.com&#10;email2@gmail.com" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;"></textarea></div>
-                    <div style="margin-bottom:14px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Subject *</label><input type="text" id="email-subject" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"></div>
-                    <div style="margin-bottom:20px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Message *</label><textarea id="email-body" rows="6" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;"></textarea></div>
-                    <div style="display:flex;gap:10px;">
-                        <button onclick="previewRecipients()" style="padding:10px 20px;background:#f4f7fb;color:var(--navy);border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;">👁 Preview Recipients</button>
-                        <button onclick="sendBulkEmail()" style="padding:10px 24px;background:var(--navy);color:white;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">✉️ Send Email</button>
-                    </div>
-                </div>
-                <div>
-                    <div id="recipient-preview" style="background:#f4f7fb;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px;display:none;">
-                        <h4 style="color:var(--navy);margin-bottom:12px;">👥 Recipients Preview</h4>
-                        <div id="recipient-preview-content"></div>
-                    </div>
-                    <div class="table-card">
-                        <div class="table-header"><h3>📋 Sent Log</h3></div>
-                        <div id="email-log-list"><div class="loading">Loading...</div></div>
-                    </div>
-                </div>
-            </div>
+        <div id="email-hall-group" class="form-group" style="display:none;">
+          <label>Hall</label>
+          <select id="email-hall">
+            <option value="">Select Hall</option>
+            <option>Al-Beruni</option><option>SSB</option><option>MH Hall</option>
+            <option>Kamal Uddin</option><option>NF</option><option>FN</option>
+          </select>
         </div>
-
-        <!-- ═══ REPORTS SECTION ═══ -->
-        <div class="page-section" id="section-reports">
-            <div class="section-header"><h2>📊 Reports & Statistics</h2></div>
-            <div id="stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
-                <div class="stat-card"><div class="stat-value" id="rpt-total">—</div><div class="stat-label">Total Registrations</div></div>
-                <div class="stat-card"><div class="stat-value" id="rpt-approved">—</div><div class="stat-label">Approved Members</div></div>
-                <div class="stat-card"><div class="stat-value" id="rpt-pending">—</div><div class="stat-label">Pending</div></div>
-                <div class="stat-card"><div class="stat-value" id="rpt-events">—</div><div class="stat-label">Total Events</div></div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
-                <div class="table-card">
-                    <div class="table-header"><h3>By Department</h3></div>
-                    <div id="dept-stats"></div>
-                </div>
-                <div class="table-card">
-                    <div class="table-header"><h3>By Hall</h3></div>
-                    <div id="hall-stats"></div>
-                </div>
-            </div>
-            <div class="table-card">
-                <div class="table-header"><h3>📥 Export Data</h3></div>
-                <div style="padding:20px;display:flex;flex-wrap:wrap;gap:12px;">
-                    <div style="background:#f4f7fb;border-radius:10px;padding:20px;flex:1;min-width:200px;">
-                        <div style="font-size:24px;margin-bottom:8px;">👥</div>
-                        <div style="font-weight:700;color:var(--navy);margin-bottom:4px;">All Members</div>
-                        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Export complete member list with all details</div>
-                        <button onclick="exportCSV('members')" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer;">⬇ Download CSV</button>
-                    </div>
-                    <div style="background:#f4f7fb;border-radius:10px;padding:20px;flex:1;min-width:200px;">
-                        <div style="font-size:24px;margin-bottom:8px;">🎓</div>
-                        <div style="font-weight:700;color:var(--navy);margin-bottom:4px;">By Department</div>
-                        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Filter members by department</div>
-                        <input type="text" id="export-dept" placeholder="Department name" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:8px;">
-                        <button onclick="exportCSV('members', 'department')" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer;">⬇ Download CSV</button>
-                    </div>
-                    <div style="background:#f4f7fb;border-radius:10px;padding:20px;flex:1;min-width:200px;">
-                        <div style="font-size:24px;margin-bottom:8px;">🏛️</div>
-                        <div style="font-weight:700;color:var(--navy);margin-bottom:4px;">By Hall</div>
-                        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Filter members by residential hall</div>
-                        <select id="export-hall" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;margin-bottom:8px;">
-                            <option value="">All Halls</option>
-                            <option>Al-Beruni Hall</option><option>SSB Hall</option><option>MH Hall</option>
-                            <option>Kamal Uddin Hall</option><option>NF Hall</option><option>FN Hall</option>
-                        </select>
-                        <button onclick="exportCSV('members', 'hall')" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer;">⬇ Download CSV</button>
-                    </div>
-                    <div style="background:#f4f7fb;border-radius:10px;padding:20px;flex:1;min-width:200px;">
-                        <div style="font-size:24px;margin-bottom:8px;">📅</div>
-                        <div style="font-weight:700;color:var(--navy);margin-bottom:4px;">Events Report</div>
-                        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Export all events with RSVP counts</div>
-                        <button onclick="exportCSV('events')" style="padding:8px 16px;background:var(--navy);color:white;border:none;border-radius:6px;font-family:inherit;font-size:13px;cursor:pointer;">⬇ Download CSV</button>
-                    </div>
-                </div>
-            </div>
+        <div id="email-custom-group" class="form-group" style="display:none;">
+          <label>Email Addresses (one per line)</label>
+          <textarea id="email-custom" rows="4" placeholder="email1@gmail.com&#10;email2@gmail.com"></textarea>
         </div>
+        <div class="form-group"><label>Subject</label><input type="text" id="email-subject"></div>
+        <div class="form-group"><label>Message</label><textarea id="email-body" rows="6"></textarea></div>
+        <button class="btn btn-primary" onclick="sendBulkEmail()">Send Email</button>
+      </div>
+    </div>
 
-    </main>
+    <!-- REPORTS -->
+    <div class="section" id="section-reports">
+      <div class="section-title">Reports</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="num" id="r-total">-</div><div class="lbl">Total Members</div></div>
+        <div class="stat-card"><div class="num" id="r-approved">-</div><div class="lbl">Approved</div></div>
+        <div class="stat-card"><div class="num" id="r-pending">-</div><div class="lbl">Pending</div></div>
+        <div class="stat-card"><div class="num" id="r-events">-</div><div class="lbl">Events</div></div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+        <button class="btn btn-primary" onclick="exportCSV('members')">⬇ Export Members CSV</button>
+        <button class="btn btn-primary" onclick="exportCSV('events')">⬇ Export Events CSV</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal-backdrop" id="reject-modal">
+  <div class="modal">
+    <h3>Reject Registration</h3>
+    <div class="form-group"><label>Reason (optional)</label><textarea id="reject-reason" rows="3"></textarea></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-danger" onclick="confirmReject()">Confirm Reject</button>
+      <button class="btn btn-secondary" onclick="closeRejectModal()">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script>
 var API_BASE = 'https://ju18-alumni-production.up.railway.app';
-var token = localStorage.getItem('access_token');
-var user = JSON.parse(localStorage.getItem('user') || '{}');
-var isSuperAdmin = user.role === 'super_admin';
+var currentRejectId = null;
+var editEventId = null;
+var allMembers = [];
 
-if (!token || (user.role !== 'admin' && user.role !== 'super_admin')) {
+function logout() {
+    localStorage.clear();
     window.location.href = API_BASE + '/pages/login.html';
 }
 
-// Show super admin features
-if (isSuperAdmin) {
-    document.getElementById('admin-mgmt-section').style.display = 'block';
-    document.getElementById('role-badge').textContent = '⚙️ Super Admin';
-}
-
-
-function logout() { localStorage.clear(); window.location.href = API_BASE + '/pages/login.html'; }
-
 function showSection(name) {
-    document.querySelectorAll('.page-section').forEach(function(s) { s.classList.remove('active'); });
+    document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
     document.querySelectorAll('.menu-item').forEach(function(m) { m.classList.remove('active'); });
-    var section = document.getElementById('section-' + name);
-    var menu = document.getElementById('menu-' + name);
-    if (section) section.classList.add('active');
-    if (menu) menu.classList.add('active');
+    var s = document.getElementById('section-' + name);
+    var m = document.getElementById('menu-' + name);
+    if (s) s.classList.add('active');
+    if (m) m.classList.add('active');
     if (name === 'pending') loadPending();
-    if (name === 'members') loadAllMembers();
+    if (name === 'members') loadMembers();
+    if (name === 'memories') loadMemories();
     if (name === 'admins') loadAdmins();
-    if (name === 'memories') loadAdminMemories();
-    if (name === 'events') loadAdminEvents();
-    if (name === 'announcements') { loadAnnouncements(); }
-    if (name === 'bulkemail') loadEmailLogs();
-    if (name === 'reports') loadReportStats();
+    if (name === 'events') loadEvents();
+    if (name === 'announcements') loadAnnouncements();
+    if (name === 'reports') loadReports();
 }
 
-function apiRequest(path, options) {
-    var currentToken = localStorage.getItem('access_token');
+async function api(path, options) {
+    var token = localStorage.getItem('access_token');
     var opts = options || {};
     opts.headers = opts.headers || {};
-    opts.headers['Authorization'] = 'Bearer ' + currentToken;
-    return fetch(API_BASE + path, opts).then(function(res) {
-        if (res.status === 401) { logout(); return null; }
-        return res.json().then(function(data) { return { ok: res.ok, data: data }; });
-    });
-}
-
-function loadStats() {
-    apiRequest('/api/admin/stats').then(function(result) {
-        if (!result) return;
-        document.getElementById('stat-total').textContent = result.data.total_members;
-        document.getElementById('stat-pending').textContent = result.data.pending_approvals;
-        document.getElementById('stat-registrations').textContent = result.data.total_registrations;
-        document.getElementById('stat-events').textContent = result.data.total_events;
-        document.getElementById('pending-count').textContent = result.data.pending_approvals;
-        if (result.data.pending_approvals > 0) {
-            document.getElementById('card-pending').classList.add('pending-highlight');
-        }
-    });
-}
-
-function loadPending() {
-    var container = document.getElementById('pending-table');
-    container.innerHTML = '<div class="loading">Loading...</div>';
-    apiRequest('/api/admin/pending-members').then(function(result) {
-        if (!result) return;
-        var data = result.data;
-        if (!data || data.length === 0) { container.innerHTML = '<div class="empty">🎉 No pending approvals!</div>'; return; }
-        container.innerHTML = '<table><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Phone</th><th>Registered</th><th>Actions</th></tr></thead><tbody>' +
-            data.map(function(m) {
-                return '<tr><td><strong>' + m.full_name + '</strong></td><td>' + m.email + '</td><td>' + (m.department || '—') + '</td><td>' + (m.phone || '—') + '</td><td>' + new Date(m.created_at).toLocaleDateString() + '</td><td><div class="btn-actions"><button class="btn btn-approve" onclick="approveMember(' + m.user_id + ', \'' + m.full_name.replace(/'/g, "\\'") + '\')">✓ Approve</button><button class="btn btn-reject" onclick="rejectMember(' + m.user_id + ', \'' + m.full_name.replace(/'/g, "\\'") + '\')">✗ Reject</button></div></td></tr>';
-            }).join('') + '</tbody></table>';
-    });
-}
-
-function approveMember(userId, name) {
-    if (!confirm('Approve ' + name + '?\n\nThey will receive an email to set their password.')) return;
-    apiRequest('/api/admin/approve-member', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, action: 'approve' })
-    }).then(function(result) {
-        var alertEl = document.getElementById('pending-alert');
-        if (!result) return;
-        alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
-        alertEl.textContent = result.ok ? '✅ ' + name + ' approved! Set-password email sent.' : (result.data.detail || 'Failed');
-        if (result.ok) { loadPending(); async function loadAdminMemories() {
-    const container = document.getElementById('admin-memories-table');
-    container.innerHTML = '<div class="loading">Loading...</div>';
-    const result = await apiRequest('/api/members/memories');
-    if (!result) return;
-    const data = result.data;
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div class="empty">No memories shared yet.</div>';
-        return;
+    opts.headers['Authorization'] = 'Bearer ' + token;
+    if (opts.body && !opts.headers['Content-Type']) {
+        opts.headers['Content-Type'] = 'application/json';
     }
-    container.innerHTML = '<table><thead><tr><th>Title</th><th>Shared By</th><th>Description</th><th>Photos</th><th>Date</th><th>Action</th></tr></thead><tbody>' +
-        data.map(function(m) {
-            var photoCount = m.photos ? m.photos.length : 0;
-            return '<tr><td><strong>' + m.title + '</strong></td>' +
-                '<td>' + (m.author_name || '—') + '</td>' +
-                '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (m.description || '—') + '</td>' +
-                '<td>' + (photoCount > 0 ? '📷 ' + photoCount + ' photo(s)' : '—') + '</td>' +
-                '<td>' + new Date(m.created_at).toLocaleDateString() + '</td>' +
-                '<td><button class="btn btn-reject" onclick="adminDeleteMemory(' + m.id + ')">🗑 Delete</button></td></tr>';
-        }).join('') + '</tbody></table>';
-}
-
-async function adminDeleteMemory(id) {
-    if (!confirm('Delete this memory permanently?')) return;
-    const result = await apiRequest('/api/members/memories/' + id, { method: 'DELETE' });
-    const alertEl = document.getElementById('admin-memories-alert');
-    if (!result) return;
-    alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
-    alertEl.textContent = result.ok ? '✅ Memory deleted.' : (result.data.detail || 'Failed');
-    if (result.ok) loadAdminMemories();
-}
-
-loadStats(); }
-    });
-}
-
-function rejectMember(userId, name) {
-    var reason = prompt('Reason for rejecting ' + name + ' (optional):');
-    if (reason === null) return;
-    apiRequest('/api/admin/approve-member', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, action: 'reject', reason: reason })
-    }).then(function(result) {
-        var alertEl = document.getElementById('pending-alert');
-        if (!result) return;
-        alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
-        alertEl.textContent = result.ok ? name + ' rejected.' : (result.data.detail || 'Failed');
-        if (result.ok) { loadPending(); async function loadAdminMemories() {
-    const container = document.getElementById('admin-memories-table');
-    container.innerHTML = '<div class="loading">Loading...</div>';
-    const result = await apiRequest('/api/members/memories');
-    if (!result) return;
-    const data = result.data;
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div class="empty">No memories shared yet.</div>';
-        return;
+    try {
+        var res = await fetch(API_BASE + path, opts);
+        var data = await res.json();
+        return { ok: res.ok, status: res.status, data: data };
+    } catch(e) {
+        return { ok: false, data: { detail: e.message } };
     }
-    container.innerHTML = '<table><thead><tr><th>Title</th><th>Shared By</th><th>Description</th><th>Photos</th><th>Date</th><th>Action</th></tr></thead><tbody>' +
-        data.map(function(m) {
-            var photoCount = m.photos ? m.photos.length : 0;
-            return '<tr><td><strong>' + m.title + '</strong></td>' +
-                '<td>' + (m.author_name || '—') + '</td>' +
-                '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (m.description || '—') + '</td>' +
-                '<td>' + (photoCount > 0 ? '📷 ' + photoCount + ' photo(s)' : '—') + '</td>' +
-                '<td>' + new Date(m.created_at).toLocaleDateString() + '</td>' +
-                '<td><button class="btn btn-reject" onclick="adminDeleteMemory(' + m.id + ')">🗑 Delete</button></td></tr>';
-        }).join('') + '</tbody></table>';
-}
-
-async function adminDeleteMemory(id) {
-    if (!confirm('Delete this memory permanently?')) return;
-    const result = await apiRequest('/api/members/memories/' + id, { method: 'DELETE' });
-    const alertEl = document.getElementById('admin-memories-alert');
-    if (!result) return;
-    alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
-    alertEl.textContent = result.ok ? '✅ Memory deleted.' : (result.data.detail || 'Failed');
-    if (result.ok) loadAdminMemories();
-}
-
-loadStats(); }
-    });
-}
-
-function loadAllMembers() {
-    var container = document.getElementById('members-table');
-    container.innerHTML = '<div class="loading">Loading...</div>';
-    apiRequest('/api/admin/all-members').then(function(result) {
-        if (!result) return;
-        var data = result.data;
-        container.innerHTML = '<table><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Status</th><th>Role</th><th>Last Login</th></tr></thead><tbody>' +
-            data.map(function(m) {
-                return '<tr><td><strong>' + m.full_name + '</strong></td><td>' + m.email + '</td><td>' + (m.department || '—') + '</td><td><span class="status-badge ' + m.registration_status + '">' + m.registration_status + '</span></td><td><span class="role-badge ' + m.role + '">' + m.role + '</span></td><td>' + (m.last_login ? new Date(m.last_login).toLocaleDateString() : 'Never') + '</td></tr>';
-            }).join('') + '</tbody></table>';
-    });
-}
-
-function loadAdmins() {
-    if (!isSuperAdmin) return;
-    var container = document.getElementById('admins-table');
-    container.innerHTML = '<div class="loading">Loading...</div>';
-    apiRequest('/api/admin/all-members').then(function(result) {
-        if (!result) return;
-        var data = result.data.filter(function(m) { return m.registration_status === 'approved'; });
-        container.innerHTML = '<table><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Current Role</th><th>Action</th></tr></thead><tbody>' +
-            data.map(function(m) {
-                var actionBtn = '';
-                if (m.role === 'member') {
-                    actionBtn = '<button class="btn btn-promote" onclick="changeRole(' + m.user_id + ', \'admin\', \'' + m.full_name.replace(/'/g, "\\'") + '\')">⬆ Make Admin</button>';
-                } else if (m.role === 'admin') {
-                    actionBtn = '<button class="btn btn-demote" onclick="changeRole(' + m.user_id + ', \'member\', \'' + m.full_name.replace(/'/g, "\\'") + '\')">⬇ Remove Admin</button>';
-                } else if (m.role === 'super_admin') {
-                    actionBtn = '<span style="color:var(--muted);font-size:12px">Super Admin</span>';
-                }
-                return '<tr><td><strong>' + m.full_name + '</strong></td><td>' + m.email + '</td><td>' + (m.department || '—') + '</td><td><span class="role-badge ' + m.role + '">' + m.role + '</span></td><td>' + actionBtn + '</td></tr>';
-            }).join('') + '</tbody></table>';
-    });
-}
-
-function changeRole(userId, newRole, name) {
-    if (!isSuperAdmin) return;
-    var action = newRole === 'admin' ? 'make admin' : 'remove admin from';
-    if (!confirm('Are you sure you want to ' + action + ' ' + name + '?')) return;
-    apiRequest('/api/admin/member/' + userId + '/role', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: newRole })
-    }).then(function(result) {
-        var alertEl = document.getElementById('admins-alert');
-        if (!result) return;
-        alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
-        alertEl.textContent = result.ok ? '✅ Role updated for ' + name : (result.data.detail || 'Failed');
-        if (result.ok) loadAdmins();
-    });
-}
-
-async function loadAdminMemories() {
-    const container = document.getElementById('admin-memories-table');
-    container.innerHTML = '<div class="loading">Loading...</div>';
-    const result = await apiRequest('/api/members/memories');
-    if (!result) return;
-    const data = result.data;
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div class="empty">No memories shared yet.</div>';
-        return;
-    }
-    container.innerHTML = '<table><thead><tr><th>Title</th><th>Shared By</th><th>Description</th><th>Photos</th><th>Date</th><th>Action</th></tr></thead><tbody>' +
-        data.map(function(m) {
-            var photoCount = m.photos ? m.photos.length : 0;
-            return '<tr><td><strong>' + m.title + '</strong></td>' +
-                '<td>' + (m.author_name || '—') + '</td>' +
-                '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (m.description || '—') + '</td>' +
-                '<td>' + (photoCount > 0 ? '📷 ' + photoCount + ' photo(s)' : '—') + '</td>' +
-                '<td>' + new Date(m.created_at).toLocaleDateString() + '</td>' +
-                '<td><button class="btn btn-reject" onclick="adminDeleteMemory(' + m.id + ')">🗑 Delete</button></td></tr>';
-        }).join('') + '</tbody></table>';
-}
-
-async function adminDeleteMemory(id) {
-    if (!confirm('Delete this memory permanently?')) return;
-    const result = await apiRequest('/api/members/memories/' + id, { method: 'DELETE' });
-    const alertEl = document.getElementById('admin-memories-alert');
-    if (!result) return;
-    alertEl.className = 'alert ' + (result.ok ? 'success' : 'error');
-    alertEl.textContent = result.ok ? '✅ Memory deleted.' : (result.data.detail || 'Failed');
-    if (result.ok) loadAdminMemories();
-}
-
-loadStats();
-
-// ═══ EVENTS ═══
-async function loadAdminEvents() {
-    const container = document.getElementById('events-table');
-    const result = await apiRequest('/api/events/admin/all');
-    if (!result || !result.ok) { container.innerHTML = '<div class="empty">No events yet.</div>'; return; }
-    const data = result.data;
-    if (!data.length) { container.innerHTML = '<div class="empty">No events yet. Create one!</div>'; return; }
-    container.innerHTML = '<table><thead><tr><th>Title</th><th>Date</th><th>Venue</th><th>Type</th><th>RSVP</th><th>Status</th><th>Actions</th></tr></thead><tbody>' +
-        data.map(e => `<tr>
-            <td><strong>${e.title}</strong></td>
-            <td>${e.event_date || '—'}</td>
-            <td>${e.venue || '—'}</td>
-            <td><span class="badge">${e.event_type || 'general'}</span></td>
-            <td>${e.rsvp_count} ${e.max_attendees ? '/ ' + e.max_attendees : ''}</td>
-            <td><span class="status-badge ${e.is_published ? 'approved' : 'pending'}">${e.is_published ? 'Published' : 'Draft'}</span></td>
-            <td>
-                <button class="btn btn-sm" onclick="editEvent(${JSON.stringify(e).replace(/"/g, '&quot;')})">✏️ Edit</button>
-                <button class="btn btn-sm" onclick="viewAttendees(${e.id}, '${e.title}')">👥 RSVPs</button>
-                <button class="btn btn-reject btn-sm" onclick="deleteEvent(${e.id})">🗑</button>
-            </td>
-        </tr>`).join('') + '</tbody></table>';
-}
-
-function editEvent(e) {
-    document.getElementById('event-form-wrap').style.display = 'block';
-    document.getElementById('event-form-title').textContent = 'Edit Event';
-    document.getElementById('event-edit-id').value = e.id;
-    document.getElementById('ev-title').value = e.title || '';
-    document.getElementById('ev-type').value = e.event_type || 'general';
-    document.getElementById('ev-date').value = e.event_date ? e.event_date.substring(0,10) : '';
-    document.getElementById('ev-time').value = e.event_time || '';
-    document.getElementById('ev-venue').value = e.venue || '';
-    document.getElementById('ev-max').value = e.max_attendees || '';
-    document.getElementById('ev-desc').value = e.description || '';
-    document.getElementById('ev-rsvp').checked = e.is_rsvp_enabled !== false;
-    document.getElementById('ev-published').checked = e.is_published !== false;
-    document.getElementById('event-form-wrap').scrollIntoView({behavior:'smooth'});
-}
-
-function cancelEventForm() {
-    document.getElementById('event-form-wrap').style.display = 'none';
-    document.getElementById('event-edit-id').value = '';
-    document.getElementById('ev-title').value = '';
-    document.getElementById('ev-desc').value = '';
-}
-
-async function saveEvent() {
-    const editId = document.getElementById('event-edit-id').value;
-    const payload = {
-        title: document.getElementById('ev-title').value.trim(),
-        event_date: document.getElementById('ev-date').value,
-        event_time: document.getElementById('ev-time').value,
-        venue: document.getElementById('ev-venue').value.trim(),
-        event_type: document.getElementById('ev-type').value,
-        description: document.getElementById('ev-desc').value.trim(),
-        is_rsvp_enabled: document.getElementById('ev-rsvp').checked,
-        is_published: document.getElementById('ev-published').checked,
-        max_attendees: document.getElementById('ev-max').value ? parseInt(document.getElementById('ev-max').value) : null,
-    };
-    if (!payload.title || !payload.event_date) {
-        showAlert('event-alert', 'error', 'Title and date are required.');
-        return;
-    }
-    const url = editId ? `/api/events/admin/${editId}` : '/api/events/admin/create';
-    const method = editId ? 'PUT' : 'POST';
-    const result = await apiRequest(url, { method, body: JSON.stringify(payload) });
-    if (result && result.ok) {
-        showAlert('event-alert', 'success', editId ? '✅ Event updated!' : '✅ Event created!');
-        cancelEventForm();
-        loadAdminEvents();
-    } else {
-        showAlert('event-alert', 'error', '❌ Failed to save event.');
-    }
-}
-
-async function deleteEvent(id) {
-    if (!confirm('Delete this event permanently?')) return;
-    const result = await apiRequest(`/api/events/admin/${id}`, { method: 'DELETE' });
-    if (result && result.ok) { loadAdminEvents(); }
-}
-
-async function viewAttendees(id, title) {
-    const result = await apiRequest(`/api/events/admin/${id}/attendees`);
-    if (!result || !result.ok) return;
-    const attendees = result.data;
-    const msg = attendees.length === 0 ? 'No RSVPs yet.' :
-        attendees.map((a,i) => `${i+1}. ${a.full_name} - ${a.department || ''} - ${a.phone || ''}`).join('\n');
-    alert('RSVPs for "' + title + '" (' + attendees.length + '):\n\n' + msg);
-}
-
-// ═══ ANNOUNCEMENTS ═══
-async function loadAnnouncements() {
-    const result = await apiRequest('/api/announcements/admin/all');
-    const container = document.getElementById('ann-list');
-    if (!result || !result.ok || !result.data.length) {
-        container.innerHTML = '<div class="empty">No announcements yet.</div>';
-        return;
-    }
-    const priorityColors = { normal: '#27ae60', important: '#f39c12', urgent: '#e74c3c' };
-    container.innerHTML = result.data.map(a => `
-        <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;">
-            <div>
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                    <span style="font-weight:700;color:var(--navy);">${a.title}</span>
-                    <span style="background:${priorityColors[a.priority]||'#27ae60'};color:white;font-size:10px;padding:2px 8px;border-radius:10px;">${a.priority}</span>
-                    ${!a.is_active ? '<span style="background:#eee;color:#999;font-size:10px;padding:2px 8px;border-radius:10px;">Removed</span>' : ''}
-                </div>
-                <div style="font-size:13px;color:var(--text);margin-bottom:4px;">${a.body}</div>
-                <div style="font-size:11px;color:var(--muted);">By ${a.created_by} · ${new Date(a.created_at).toLocaleString()}</div>
-            </div>
-            ${a.is_active ? `<button class="btn btn-reject btn-sm" onclick="deleteAnnouncement(${a.id})">🗑</button>` : ''}
-        </div>
-    `).join('');
-}
-
-async function postAnnouncement() {
-    const title = document.getElementById('ann-title').value.trim();
-    const body = document.getElementById('ann-body').value.trim();
-    if (!title || !body) { showAlert('ann-alert', 'error', 'Title and message required.'); return; }
-    const result = await apiRequest('/api/announcements', {
-        method: 'POST',
-        body: JSON.stringify({
-            title, body,
-            priority: document.getElementById('ann-priority').value,
-            send_email: document.getElementById('ann-email').checked
-        })
-    });
-    if (result && result.ok) {
-        showAlert('ann-alert', 'success', '✅ ' + result.data.message);
-        document.getElementById('ann-title').value = '';
-        document.getElementById('ann-body').value = '';
-        loadAnnouncements();
-    } else {
-        showAlert('ann-alert', 'error', '❌ Failed to post announcement.');
-    }
-}
-
-async function deleteAnnouncement(id) {
-    if (!confirm('Remove this announcement?')) return;
-    await apiRequest(`/api/announcements/${id}`, { method: 'DELETE' });
-    loadAnnouncements();
-}
-
-// ═══ BULK EMAIL ═══
-function updateRecipientOptions() {
-    const type = document.getElementById('email-recipient-type').value;
-    document.getElementById('email-dept-wrap').style.display = type === 'department' ? 'block' : 'none';
-    document.getElementById('email-hall-wrap').style.display = type === 'hall' ? 'block' : 'none';
-    document.getElementById('email-custom-wrap').style.display = type === 'custom' ? 'block' : 'none';
-}
-
-async function previewRecipients() {
-    const type = document.getElementById('email-recipient-type').value;
-    const dept = document.getElementById('email-dept').value;
-    const hall = document.getElementById('email-hall').value;
-    let url = `/api/email/recipients/preview?recipient_type=${type}`;
-    if (dept) url += `&department=${encodeURIComponent(dept)}`;
-    if (hall) url += `&hall=${encodeURIComponent(hall)}`;
-    const result = await apiRequest(url);
-    if (!result || !result.ok) return;
-    const d = result.data;
-    document.getElementById('recipient-preview').style.display = 'block';
-    document.getElementById('recipient-preview-content').innerHTML =
-        `<div style="font-size:24px;font-weight:700;color:var(--navy);">${d.count}</div>
-         <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">recipients found</div>
-         <div style="font-size:12px;color:var(--text);">${d.emails.join(', ')}${d.count > 10 ? ' ...' : ''}</div>`;
-}
-
-async function sendBulkEmail() {
-    const subject = document.getElementById('email-subject').value.trim();
-    const body = document.getElementById('email-body').value.trim();
-    const type = document.getElementById('email-recipient-type').value;
-    if (!subject || !body) { showAlert('email-alert', 'error', 'Subject and message required.'); return; }
-    if (!confirm(`Send email to all ${type} recipients? This cannot be undone.`)) return;
-    const payload = {
-        subject, body,
-        recipient_type: type,
-        department: document.getElementById('email-dept').value || null,
-        hall: document.getElementById('email-hall').value || null,
-        custom_emails: type === 'custom' ? document.getElementById('email-custom').value.split('\n').map(e=>e.trim()).filter(Boolean) : null,
-    };
-    showAlert('email-alert', 'info', '⏳ Sending emails...');
-    const result = await apiRequest('/api/email/send', { method: 'POST', body: JSON.stringify(payload) });
-    if (result && result.ok) {
-        showAlert('email-alert', 'success', `✅ ${result.data.message} (${result.data.failed} failed)`);
-        loadEmailLogs();
-    } else {
-        showAlert('email-alert', 'error', '❌ Failed to send emails.');
-    }
-}
-
-async function loadEmailLogs() {
-    const result = await apiRequest('/api/email/logs');
-    const container = document.getElementById('email-log-list');
-    if (!result || !result.ok || !result.data.length) {
-        container.innerHTML = '<div class="empty">No emails sent yet.</div>';
-        return;
-    }
-    container.innerHTML = '<table><thead><tr><th>Subject</th><th>Recipients</th><th>Type</th><th>Sent By</th><th>Date</th></tr></thead><tbody>' +
-        result.data.map(l => `<tr>
-            <td>${l.subject}</td>
-            <td>${l.recipient_count}</td>
-            <td>${l.recipient_type}</td>
-            <td>${l.sent_by}</td>
-            <td>${new Date(l.sent_at).toLocaleString()}</td>
-        </tr>`).join('') + '</tbody></table>';
-}
-
-// ═══ REPORTS ═══
-async function loadReportStats() {
-    const result = await apiRequest('/api/reports/statistics');
-    if (!result || !result.ok) return;
-    const d = result.data;
-    document.getElementById('rpt-total').textContent = d.members.total;
-    document.getElementById('rpt-approved').textContent = d.members.approved;
-    document.getElementById('rpt-pending').textContent = d.members.pending;
-    document.getElementById('rpt-events').textContent = d.events.total;
-
-    document.getElementById('dept-stats').innerHTML = '<table><thead><tr><th>Department</th><th>Members</th></tr></thead><tbody>' +
-        d.by_department.map(r => `<tr><td>${r.department}</td><td>${r.count}</td></tr>`).join('') + '</tbody></table>';
-
-    document.getElementById('hall-stats').innerHTML = d.by_hall.length ? '<table><thead><tr><th>Hall</th><th>Members</th></tr></thead><tbody>' +
-        d.by_hall.map(r => `<tr><td>${r.hall}</td><td>${r.count}</td></tr>`).join('') + '</tbody></table>' :
-        '<div class="empty">No hall data yet.</div>';
-}
-
-function exportCSV(type, filter) {
-    let url = `/api/reports/${type}?`;
-    if (filter === 'department') {
-        const dept = document.getElementById('export-dept').value.trim();
-        if (!dept) { alert('Please enter a department name.'); return; }
-        url += `department=${encodeURIComponent(dept)}`;
-    } else if (filter === 'hall') {
-        const hall = document.getElementById('export-hall').value;
-        if (hall) url += `hall=${encodeURIComponent(hall)}`;
-    }
-    window.open(API_BASE + url, '_blank');
 }
 
 function showAlert(id, type, msg) {
-    const el = document.getElementById(id);
+    var el = document.getElementById(id);
     if (!el) return;
-    const colors = { success: '#eafaf1', error: '#fdecea', info: '#e8f0f8' };
-    const textColors = { success: '#27ae60', error: '#e74c3c', info: '#1a3a5c' };
-    el.style.display = 'block';
-    el.style.background = colors[type] || colors.info;
-    el.style.color = textColors[type] || textColors.info;
-    el.style.padding = '12px 16px';
-    el.style.borderRadius = '8px';
-    el.style.marginBottom = '16px';
+    el.className = 'alert ' + type;
     el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(function() { el.style.display = 'none'; }, 5000);
 }
 
+// ===== OVERVIEW =====
+async function loadStats() {
+    var r = await api('/api/admin/stats');
+    if (r.ok) {
+        document.getElementById('stat-total').textContent = r.data.total_members || 0;
+        document.getElementById('stat-pending').textContent = r.data.pending_members || 0;
+        document.getElementById('stat-approved').textContent = r.data.approved_members || 0;
+        document.getElementById('stat-events').textContent = r.data.total_events || 0;
+        document.getElementById('pending-count').textContent = r.data.pending_members || 0;
+    }
+}
 
-// Initialize dashboard
+// ===== PENDING =====
+async function loadPending() {
+    var r = await api('/api/admin/pending-members');
+    var el = document.getElementById('pending-list');
+    if (!r.ok || !r.data.length) { el.innerHTML = '<div class="empty">No pending registrations</div>'; return; }
+    var html = '<table><thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Phone</th><th>Actions</th></tr></thead><tbody>';
+    r.data.forEach(function(m) {
+        html += '<tr><td><strong>' + m.full_name + '</strong></td><td>' + m.email + '</td><td>' + (m.department||'-') + '</td><td>' + (m.phone||'-') + '</td><td style="display:flex;gap:6px;">' +
+            '<button class="btn btn-success" style="font-size:12px;padding:6px 10px;" onclick="approveMember(' + m.user_id + ')">✓ Approve</button>' +
+            '<button class="btn btn-danger" style="font-size:12px;padding:6px 10px;" onclick="openRejectModal(' + m.user_id + ')">✗ Reject</button>' +
+            '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+async function approveMember(userId) {
+    var r = await api('/api/admin/approve-member', { method: 'POST', body: JSON.stringify({ user_id: userId, action: 'approve' }) });
+    if (r.ok) { loadPending(); loadStats(); } 
+    else { alert('Error: ' + (r.data.detail || 'Failed')); }
+}
+
+function openRejectModal(userId) {
+    currentRejectId = userId;
+    document.getElementById('reject-reason').value = '';
+    document.getElementById('reject-modal').classList.add('show');
+}
+
+function closeRejectModal() {
+    document.getElementById('reject-modal').classList.remove('show');
+    currentRejectId = null;
+}
+
+async function confirmReject() {
+    var reason = document.getElementById('reject-reason').value;
+    var r = await api('/api/admin/approve-member', { method: 'POST', body: JSON.stringify({ user_id: currentRejectId, action: 'reject', reason: reason }) });
+    if (r.ok) { closeRejectModal(); loadPending(); loadStats(); }
+    else { alert('Error: ' + (r.data.detail || 'Failed')); }
+}
+
+// ===== MEMBERS =====
+async function loadMembers() {
+    var r = await api('/api/admin/all-members');
+    var el = document.getElementById('members-list');
+    if (!r.ok) { el.innerHTML = '<div class="empty">Failed to load members</div>'; return; }
+    allMembers = Array.isArray(r.data) ? r.data : (r.data.members || []);
+    renderMembers(allMembers);
+}
+
+function renderMembers(members) {
+    var el = document.getElementById('members-list');
+    if (!members.length) { el.innerHTML = '<div class="empty">No members found</div>'; return; }
+    var html = '<table><thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Status</th><th>Joined</th></tr></thead><tbody>';
+    members.forEach(function(m) {
+        var statusColor = m.registration_status === 'approved' ? '#27ae60' : m.registration_status === 'pending' ? '#f39c12' : '#e74c3c';
+        html += '<tr><td><strong>' + m.full_name + '</strong></td><td>' + (m.email||'-') + '</td><td>' + (m.department||'-') + '</td>' +
+            '<td><span style="color:' + statusColor + ';font-weight:600;">' + (m.registration_status||'-') + '</span></td>' +
+            '<td>' + (m.created_at ? m.created_at.substring(0,10) : '-') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+function filterMembers() {
+    var q = document.getElementById('member-search').value.toLowerCase();
+    var filtered = allMembers.filter(function(m) {
+        return (m.full_name||'').toLowerCase().includes(q) || (m.email||'').toLowerCase().includes(q) || (m.department||'').toLowerCase().includes(q);
+    });
+    renderMembers(filtered);
+}
+
+// ===== MEMORIES =====
+async function loadMemories() {
+    var r = await api('/api/members/memories?admin=true');
+    var el = document.getElementById('memories-list');
+    var list = Array.isArray(r.data) ? r.data : (r.data.memories || []);
+    if (!list.length) { el.innerHTML = '<div class="empty">No memories submitted</div>'; return; }
+    var html = '<table><thead><tr><th>Title</th><th>By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+    list.forEach(function(m) {
+        html += '<tr><td>' + m.title + '</td><td>' + (m.submitted_by||'-') + '</td><td>' + (m.created_at||'').substring(0,10) + '</td>' +
+            '<td>' + (m.is_approved ? '<span style="color:#27ae60">Approved</span>' : '<span style="color:#f39c12">Pending</span>') + '</td>' +
+            '<td><button class="btn btn-danger" style="font-size:12px;padding:5px 10px;" onclick="deleteMemory(' + m.id + ')">Delete</button></td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+async function deleteMemory(id) {
+    if (!confirm('Delete this memory?')) return;
+    var r = await api('/api/members/memories/' + id, { method: 'DELETE' });
+    if (r.ok) loadMemories();
+    else alert('Error: ' + (r.data.detail || 'Failed'));
+}
+
+// ===== ADMINS =====
+async function loadAdmins() {
+    var r = await api('/api/admin/all-members');
+    var el = document.getElementById('admins-list');
+    var members = Array.isArray(r.data) ? r.data : (r.data.members || []);
+    var admins = members.filter(function(m) { return m.role === 'admin' || m.role === 'super_admin'; });
+    if (!admins.length) { el.innerHTML = '<div class="empty">No admins found</div>'; return; }
+    var html = '<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>';
+    admins.forEach(function(m) {
+        html += '<tr><td>' + m.full_name + '</td><td>' + (m.email||'-') + '</td><td>' + m.role + '</td>' +
+            '<td><button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="changeRole(' + m.user_id + ', \'member\')">Remove Admin</button></td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+async function changeRole(userId, role) {
+    if (!confirm('Change role to ' + role + '?')) return;
+    var r = await api('/api/admin/change-role', { method: 'POST', body: JSON.stringify({ user_id: userId, role: role }) });
+    if (r.ok) loadAdmins();
+    else alert('Error: ' + (r.data.detail || 'Failed'));
+}
+
+// ===== EVENTS =====
+async function loadEvents() {
+    var r = await api('/api/events/admin/all');
+    var el = document.getElementById('events-list');
+    var list = Array.isArray(r.data) ? r.data : [];
+    if (!list.length) { el.innerHTML = '<div class="empty">No events yet</div>'; return; }
+    var html = '<table><thead><tr><th>Title</th><th>Date</th><th>Location</th><th>RSVPs</th><th>Actions</th></tr></thead><tbody>';
+    list.forEach(function(e) {
+        html += '<tr><td><strong>' + e.title + '</strong></td><td>' + (e.event_date||'').substring(0,10) + '</td><td>' + (e.location||'-') + '</td>' +
+            '<td>' + (e.rsvp_count||0) + '</td>' +
+            '<td style="display:flex;gap:6px;">' +
+            '<button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="editEvent(' + e.id + ')">Edit</button>' +
+            '<button class="btn btn-danger" style="font-size:12px;padding:5px 10px;" onclick="deleteEvent(' + e.id + ')">Delete</button>' +
+            '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+function cancelEventForm() {
+    editEventId = null;
+    document.getElementById('event-form-title').textContent = 'Create Event';
+    ['ev-title','ev-date','ev-time','ev-location','ev-desc','ev-max'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('ev-type').value = 'general';
+}
+
+async function editEvent(id) {
+    var r = await api('/api/events/admin/' + id);
+    if (!r.ok) return;
+    var e = r.data;
+    editEventId = id;
+    document.getElementById('event-form-title').textContent = 'Edit Event';
+    document.getElementById('ev-title').value = e.title || '';
+    document.getElementById('ev-date').value = (e.event_date||'').substring(0,10);
+    document.getElementById('ev-time').value = e.event_time || '';
+    document.getElementById('ev-location').value = e.location || '';
+    document.getElementById('ev-desc').value = e.description || '';
+    document.getElementById('ev-max').value = e.max_attendees || '';
+    document.getElementById('ev-type').value = e.event_type || 'general';
+    window.scrollTo(0,0);
+}
+
+async function saveEvent() {
+    var payload = {
+        title: document.getElementById('ev-title').value,
+        event_date: document.getElementById('ev-date').value,
+        event_time: document.getElementById('ev-time').value,
+        location: document.getElementById('ev-location').value,
+        description: document.getElementById('ev-desc').value,
+        max_attendees: parseInt(document.getElementById('ev-max').value) || 0,
+        event_type: document.getElementById('ev-type').value,
+        is_published: true
+    };
+    if (!payload.title || !payload.event_date) { showAlert('event-alert','error','Title and date are required'); return; }
+    var path = editEventId ? '/api/events/admin/' + editEventId : '/api/events/admin/create';
+    var method = editEventId ? 'PUT' : 'POST';
+    var r = await api(path, { method: method, body: JSON.stringify(payload) });
+    if (r.ok) { showAlert('event-alert','success','Event saved!'); cancelEventForm(); loadEvents(); }
+    else { showAlert('event-alert','error', r.data.detail || 'Failed to save event'); }
+}
+
+async function deleteEvent(id) {
+    if (!confirm('Delete this event?')) return;
+    var r = await api('/api/events/admin/' + id, { method: 'DELETE' });
+    if (r.ok) loadEvents();
+    else alert('Failed to delete event');
+}
+
+// ===== ANNOUNCEMENTS =====
+async function loadAnnouncements() {
+    var r = await api('/api/announcements/admin/all');
+    var el = document.getElementById('announcements-list');
+    var list = Array.isArray(r.data) ? r.data : [];
+    if (!list.length) { el.innerHTML = '<div class="empty">No announcements yet</div>'; return; }
+    var html = '<table><thead><tr><th>Title</th><th>Pinned</th><th>Created</th><th>Expires</th><th>Action</th></tr></thead><tbody>';
+    list.forEach(function(a) {
+        html += '<tr><td><strong>' + a.title + '</strong><br><small style="color:#95a5a6;">' + (a.content||'').substring(0,60) + '...</small></td>' +
+            '<td>' + (a.is_pinned ? '📌' : '-') + '</td>' +
+            '<td>' + (a.created_at||'').substring(0,10) + '</td>' +
+            '<td>' + (a.expires_at ? a.expires_at.substring(0,10) : '-') + '</td>' +
+            '<td><button class="btn btn-danger" style="font-size:12px;padding:5px 10px;" onclick="deleteAnnouncement(' + a.id + ')">Delete</button></td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+async function postAnnouncement() {
+    var payload = {
+        title: document.getElementById('ann-title').value,
+        content: document.getElementById('ann-content').value,
+        is_pinned: document.getElementById('ann-pinned').checked,
+        is_published: true,
+        expires_at: document.getElementById('ann-expires').value || null
+    };
+    if (!payload.title || !payload.content) { showAlert('ann-alert','error','Title and content required'); return; }
+    var r = await api('/api/announcements', { method: 'POST', body: JSON.stringify(payload) });
+    if (r.ok) {
+        showAlert('ann-alert','success','Announcement posted!');
+        document.getElementById('ann-title').value = '';
+        document.getElementById('ann-content').value = '';
+        document.getElementById('ann-expires').value = '';
+        document.getElementById('ann-pinned').checked = false;
+        loadAnnouncements();
+    } else { showAlert('ann-alert','error', r.data.detail || 'Failed'); }
+}
+
+async function deleteAnnouncement(id) {
+    if (!confirm('Delete this announcement?')) return;
+    var r = await api('/api/announcements/' + id, { method: 'DELETE' });
+    if (r.ok) loadAnnouncements();
+    else alert('Failed to delete');
+}
+
+// ===== BULK EMAIL =====
+function toggleEmailOptions() {
+    var type = document.getElementById('email-type').value;
+    document.getElementById('email-dept-group').style.display = type === 'department' ? 'block' : 'none';
+    document.getElementById('email-hall-group').style.display = type === 'hall' ? 'block' : 'none';
+    document.getElementById('email-custom-group').style.display = type === 'custom' ? 'block' : 'none';
+}
+
+async function sendBulkEmail() {
+    var type = document.getElementById('email-type').value;
+    var customText = document.getElementById('email-custom').value;
+    var payload = {
+        subject: document.getElementById('email-subject').value,
+        body: document.getElementById('email-body').value,
+        recipient_type: type,
+        department: document.getElementById('email-dept').value || null,
+        hall: document.getElementById('email-hall').value || null,
+        custom_emails: type === 'custom' ? customText.split('\n').map(function(e){return e.trim();}).filter(Boolean) : null
+    };
+    if (!payload.subject || !payload.body) { showAlert('email-alert','error','Subject and message required'); return; }
+    showAlert('email-alert','info','Sending...');
+    var r = await api('/api/email/send', { method: 'POST', body: JSON.stringify(payload) });
+    if (r.ok) { showAlert('email-alert','success','Emails sent successfully!'); }
+    else { showAlert('email-alert','error', r.data.detail || 'Failed to send'); }
+}
+
+// ===== REPORTS =====
+async function loadReports() {
+    var r = await api('/api/admin/stats');
+    if (r.ok) {
+        document.getElementById('r-total').textContent = r.data.total_members || 0;
+        document.getElementById('r-approved').textContent = r.data.approved_members || 0;
+        document.getElementById('r-pending').textContent = r.data.pending_members || 0;
+        document.getElementById('r-events').textContent = r.data.total_events || 0;
+    }
+}
+
+async function exportCSV(type) {
+    var token = localStorage.getItem('access_token');
+    window.open(API_BASE + '/api/reports/' + type + '-csv?token=' + token, '_blank');
+}
+
+// ===== INIT =====
 document.addEventListener('DOMContentLoaded', function() {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
-    if (!token || role !== 'admin') {
-        window.location.href = '/pages/login.html';
+    var token = localStorage.getItem('access_token');
+    var user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!token || (user.role !== 'admin' && user.role !== 'super_admin')) {
+        window.location.href = API_BASE + '/pages/login.html';
         return;
     }
-    // Set admin name
-    const name = localStorage.getItem('name') || 'Admin';
-    const el = document.getElementById('admin-name');
-    if (el) el.textContent = name;
-    
-    showSection('overview');
+    document.getElementById('admin-name').textContent = user.full_name || user.email || 'Admin';
+    if (user.role === 'super_admin') {
+        document.getElementById('admin-hidden').style.display = 'block';
+    }
     loadStats();
 });
 </script>
