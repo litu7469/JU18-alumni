@@ -92,7 +92,7 @@ def send_rejection_email(to_email: str, name: str, reason: str = "") -> bool:
 
 
 def send_password_reset_email(to_email: str, name: str, token: str) -> bool:
-    reset_url = f"{settings.FRONTEND_URL}/pages/forgot-password.html?token={token}"
+    reset_url = f"{settings.FRONTEND_URL}/pages/set-password.html?token={token}"
     html = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #1a3a5c; padding: 30px; text-align: center;">
