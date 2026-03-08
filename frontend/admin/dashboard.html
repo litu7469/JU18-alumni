@@ -842,6 +842,23 @@ function showAlert(id, type, msg) {
     el.textContent = msg;
 }
 
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    if (!token || role !== 'admin') {
+        window.location.href = '/pages/login.html';
+        return;
+    }
+    // Set admin name
+    const name = localStorage.getItem('name') || 'Admin';
+    const el = document.getElementById('admin-name');
+    if (el) el.textContent = name;
+    
+    showSection('overview');
+    loadStats();
+});
 </script>
 </body>
 </html>
