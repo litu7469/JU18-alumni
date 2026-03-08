@@ -108,11 +108,7 @@ def serve_admin_page(page_name: str):
     return JSONResponse(status_code=404, content={"detail": "Page not found"})
 
 
-@app.get("/test-email")
-def test_email():
-    from app.services.email_service import send_email
-    result = send_email("dhakadose@gmail.com", "Test from Railway", "<b>Email via Brevo works!</b>")
-    return {"status": "sent" if result else "FAILED"}
+
 
 @app.on_event("startup")
 async def startup():
