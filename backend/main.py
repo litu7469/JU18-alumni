@@ -107,10 +107,55 @@ def serve_admin_page(page_name: str):
             return FileResponse(page_path)
     return JSONResponse(status_code=404, content={"detail": "Page not found"})
 
+
+@app.get("/test-email")
+def test_email():
+    import os
+    gmail_user = os.getenv("GMAIL_USER", "NOT SET")
+    gmail_pass = os.getenv("GMAIL_APP_PASSWORD", "NOT SET")
+    frontend_url = os.getenv("FRONTEND_URL", "NOT SET")
+    from_name = os.getenv("FROM_NAME", "NOT SET")
+    
+    # Try sending
+    try:
+        import smtplib
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(gmail_user, gmail_pass)
+            server.sendmail(gmail_user, gmail_user, "Subject: Test\n\nTest email from Railway")
+        return {
+            "status": "email sent!",
+            "gmail_user": gmail_user,
+            "frontend_url": frontend_url,
+            "from_name": from_name,
+        }
+    except Exception as e:
+        return {
+            "status": "FAILED",
+            "error": str(e),
+            "gmail_user": gmail_user[:5] + "***" if gmail_user != "NOT SET" else "NOT SET",
+            "frontend_url": frontend_url,
+            "from_name": from_name,
+        }
+
 @app.on_event("startup")
 async def startup():
     logger.info("JU 18th Batch Alumni API starting...")
     logger.info("Database: OK" if test_connection() else "Database: FAILED")
+    # Debug filesystem
+    import subprocess
+    try:
+        result = subprocess.run(['find', '/app', '-name', 'index.html', '-maxdepth', '4'], capture_output=True, text=True)
+        logger.info(f"index.html locations: {result.stdout.strip()}")
+    except:
+        pass
+    try:
+        dirs = os.listdir('/app')
+        logger.info(f"/app contents: {dirs}")
+    except:
+        pass
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
