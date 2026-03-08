@@ -13,7 +13,10 @@ def send_email(to_email: str, subject: str, html_body: str) -> bool:
         msg["From"] = f"{settings.FROM_NAME} <{settings.GMAIL_USER}>"
         msg["To"] = to_email
         msg.attach(MIMEText(html_body, "html"))
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
             server.login(settings.GMAIL_USER, settings.GMAIL_APP_PASSWORD)
             server.sendmail(settings.GMAIL_USER, to_email, msg.as_string())
         return True
