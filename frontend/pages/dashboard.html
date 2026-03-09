@@ -644,7 +644,7 @@ async function loadMemories() {
             }
             var isOwner = m.submitted_by === currentUserId;
             var canDelete = isOwner || currentRole === 'admin' || currentRole === 'super_admin';
-            var editBtn = isOwner ? '<button onclick="editMemory(' + m.id + ',\'' + m.title.replace(/\'/g,\'\') + '\')" style="padding:4px 12px;background:#e8f0f8;color:#1a3a5c;border:1px solid #b8d0e8;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;margin-right:6px;">✏️ Edit</button>' : '';
+            var editBtn = isOwner ? '<button onclick="doEditMemory(' + m.id + ')" style="padding:4px 12px;background:#e8f0f8;color:#1a3a5c;border:1px solid #b8d0e8;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;margin-right:6px;">✏️ Edit</button>' : '';
             var deleteBtn = canDelete ? '<button onclick="deleteMemory(' + m.id + ')" style="padding:4px 12px;background:#fdecea;color:#e74c3c;border:1px solid #f5c6c2;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;">🗑 Delete</button>' : '';
             return '<div style="background:white;border-radius:12px;border:1px solid var(--border);padding:24px;margin-bottom:16px;">' +
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
@@ -712,9 +712,9 @@ async function submitMemory() {
 }
 
 
-function editMemory(id, title) {
-    var newTitle = prompt('Edit memory title:', title);
-    if (newTitle === null) return;
+function doEditMemory(id) {
+    var newTitle = prompt('Edit memory title:');
+    if (!newTitle) return;
     fetch(API_BASE + '/api/members/memories/' + id, {
         method: 'PUT',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/x-www-form-urlencoded' },
