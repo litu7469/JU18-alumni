@@ -111,7 +111,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
         <a href="#" class="nav-link active" onclick="showSection('home'); return false;">📊 Dashboard</a>
         <a href="#" class="nav-link" onclick="showSection('directory'); return false;">👥 Directory</a>
         <a href="#" class="nav-link" onclick="showSection('events'); return false;">📅 Events</a>
-        <a href="#" class="nav-link" onclick="showSection('memories'); return false;">📸 Memories</a>
+        <a href="#" class="nav-link" id="menu-memories" onclick="showSection('memories'); return false;">📸 Memories</a>
     </nav>
     <div style="display:flex; align-items:center; gap:10px;">
         <div id="admin-btn" style="display:none">
@@ -374,8 +374,10 @@ function logout() {
 function showSection(name) {
     document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-    document.getElementById(`section-${name}`).classList.add('active');
-    document.getElementById(`menu-${name}`).classList.add('active');
+    var sec = document.getElementById('section-' + name);
+    var men = document.getElementById('menu-' + name);
+    if (sec) sec.classList.add('active');
+    if (men) men.classList.add('active');
     if (name === 'directory') loadDirectory();
     if (name === 'events') loadEvents();
     if (name === 'memories') loadMemories();
@@ -639,7 +641,9 @@ async function loadMemories() {
                         return '<img src="https://ju18-alumni-production.up.railway.app/uploads/' + p + '" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;cursor:pointer;background:#f4f7fb;" onclick="openPhoto(this.src)">';
                     }).join('') + '</div>';
             }
-            var canDelete = (m.submitted_by === currentUserId) || currentRole === 'admin' || currentRole === 'super_admin';
+            var isOwner = m.submitted_by === currentUserId;
+            var canDelete = isOwner || currentRole === 'admin' || currentRole === 'super_admin';
+            var editBtn = isOwner ? '<button onclick="editMemory(' + m.id + ',\'' + m.title.replace(/\'/g,\'\') + '\')" style="padding:4px 12px;background:#e8f0f8;color:#1a3a5c;border:1px solid #b8d0e8;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;margin-right:6px;">✏️ Edit</button>' : '';
             var deleteBtn = canDelete ? '<button onclick="deleteMemory(' + m.id + ')" style="padding:4px 12px;background:#fdecea;color:#e74c3c;border:1px solid #f5c6c2;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;">🗑 Delete</button>' : '';
             return '<div style="background:white;border-radius:12px;border:1px solid var(--border);padding:24px;margin-bottom:16px;">' +
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
@@ -706,6 +710,19 @@ async function submitMemory() {
     }
 }
 
+
+function editMemory(id, title) {
+    var newTitle = prompt('Edit memory title:', title);
+    if (newTitle === null) return;
+    fetch(API_BASE + '/api/members/memories/' + id, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'title=' + encodeURIComponent(newTitle)
+    }).then(function(r) {
+        if (r.ok) loadMemories();
+        else alert('Failed to update memory');
+    });
+}
 
 async function deleteMemory(id) {
     if (!confirm('Delete this memory? This cannot be undone.')) return;
