@@ -68,35 +68,29 @@ def export_members(
 
 @router.get("/statistics")
 def get_statistics(db: Session = Depends(get_db), current_user: User = Depends(get_admin_user)):
-    total = db.query(User).count()
-    approved = db.query(User).filter(User.registration_status == RegistrationStatus.APPROVED).count()
-    pending = db.query(User).filter(User.registration_status == RegistrationStatus.EMAIL_VERIFIED).count()
-    rejected = db.query(User).filter(User.registration_status == RegistrationStatus.REJECTED).count()
-    
-    # By department
     from sqlalchemy import func
-    dept_stats = db.query(Member.department, func.count(Member.id)).group_by(Member.department).all()
-    
-    # By hall
-    hall_stats = db.query(Member.hall, func.count(Member.id)).filter(Member.hall != None).group_by(Member.hall).all()
-
-    # Events
     try:
+        total = db.query(User).count()
+        approved = db.query(User).filter(User.registration_status == RegistrationStatus.APPROVED).count()
+        rejected = db.query(User).filter(User.registration_status == RegistrationStatus.REJECTED).count()
+        pending = total - approved - rejected
+        dept_stats = db.query(Member.department, func.count(Member.id)).group_by(Member.department).all()
+        hall_stats = db.query(Member.hall, func.count(Member.id)).filter(Member.hall != None).group_by(Member.hall).all()
         total_events = db.query(Event).count()
-    except:
-        total_events = 0
-
-    return {
-        "members": {
-            "total": total,
-            "approved": approved,
-            "pending": pending,
-            "rejected": rejected,
-        },
-        "by_department": [{"department": d or "Unknown", "count": c} for d, c in dept_stats],
-        "by_hall": [{"hall": h or "Unknown", "count": c} for h, c in hall_stats],
-        "events": {"total": total_events},
-    }
+        return {
+            "members": {"total": total, "approved": approved, "pending": pending, "rejected": rejected},
+            "by_department": [{"department": d or "Unknown", "count": c} for d, c in dept_stats],
+            "by_hall": [{"hall": h or "Unknown", "count": c} for h, c in hall_stats],
+            "events": {"total": total_events},
+        }
+    except Exception as e:
+        return {
+            "members": {"total": 0, "approved": 0, "pending": 0, "rejected": 0},
+            "by_department": [],
+            "by_hall": [],
+            "events": {"total": 0},
+            "error": str(e)
+        }
 
 @router.get("/events")
 def export_events(db: Session = Depends(get_db), current_user: User = Depends(get_admin_user)):
