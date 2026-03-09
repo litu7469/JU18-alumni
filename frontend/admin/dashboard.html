@@ -432,16 +432,32 @@ function filterMembers() {
 async function loadMemories() {
     var r = await api('/api/members/memories?admin=true');
     var el = document.getElementById('memories-list');
-    var list = Array.isArray(r.data) ? r.data : (r.data.memories || []);
+    var list = Array.isArray(r.data) ? r.data : [];
     if (!list.length) { el.innerHTML = '<div class="empty">No memories submitted</div>'; return; }
-    var html = '<table><thead><tr><th>Title</th><th>By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+    var html = '<table><thead><tr><th>Title</th><th>By</th><th>Year</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
     list.forEach(function(m) {
-        html += '<tr><td>' + m.title + '</td><td>' + (m.submitted_by||'-') + '</td><td>' + (m.created_at||'').substring(0,10) + '</td>' +
-            '<td>' + (m.is_approved ? '<span style="color:#27ae60">Approved</span>' : '<span style="color:#f39c12">Pending</span>') + '</td>' +
-            '<td><button class="btn btn-danger" style="font-size:12px;padding:5px 10px;" onclick="deleteMemory(' + m.id + ')">Delete</button></td></tr>';
+        var statusHtml = m.is_approved
+            ? '<span style="color:#27ae60;font-weight:600;">✓ Approved</span>'
+            : '<span style="color:#f39c12;font-weight:600;">⏳ Pending</span>';
+        var approveBtn = !m.is_approved
+            ? '<button class="btn btn-success" style="font-size:11px;padding:4px 8px;" onclick="approveMemory(' + m.id + ')">Approve</button> '
+            : '';
+        html += '<tr><td><strong>' + m.title + '</strong>' +
+            (m.photos && m.photos.length ? ' <span style="color:#95a5a6;font-size:11px;">📷' + m.photos.length + '</span>' : '') +
+            '</td><td>' + (m.author_name||'-') + '</td><td>' + (m.year||'-') + '</td><td>' + (m.created_at||'') + '</td>' +
+            '<td>' + statusHtml + '</td>' +
+            '<td style="display:flex;gap:4px;">' + approveBtn +
+            '<button class="btn btn-danger" style="font-size:11px;padding:4px 8px;" onclick="deleteMemory(' + m.id + ')">Delete</button>' +
+            '</td></tr>';
     });
     html += '</tbody></table>';
     el.innerHTML = html;
+}
+
+async function approveMemory(id) {
+    var r = await api('/api/members/memories/' + id + '/approve', { method: 'PATCH' });
+    if (r.ok) loadMemories();
+    else alert('Error: ' + (r.data.detail || 'Failed'));
 }
 
 async function deleteMemory(id) {

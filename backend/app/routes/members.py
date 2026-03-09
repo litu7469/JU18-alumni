@@ -115,7 +115,8 @@ def get_memories(db: Session = Depends(get_db), current_user: User = Depends(get
             "category": m.category,
             "author_name": author.full_name if author else "Alumni",
             "submitted_by": m.submitted_by,
-            "created_at": m.created_at,
+            "is_approved": m.is_approved,
+            "created_at": str(m.created_at)[:10] if m.created_at else "",
         })
     return result
 
@@ -156,6 +157,39 @@ async def create_memory(
     db.commit()
     db.refresh(memory)
     return {"message": "Memory shared!", "id": memory.id}
+
+@router.patch("/memories/{memory_id}/approve")
+def approve_memory(memory_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_approved_member)):
+    if current_user.role.value not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    memory = db.query(Memory).filter(Memory.id == memory_id).first()
+    if not memory:
+        raise HTTPException(status_code=404, detail="Memory not found")
+    memory.is_approved = True
+    db.commit()
+    return {"message": "Memory approved"}
+
+@router.put("/memories/{memory_id}")
+async def update_memory(
+    memory_id: int,
+    title: str = Form(...),
+    description: str = Form(""),
+    year: str = Form(""),
+    category: str = Form("general"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_approved_member)
+):
+    memory = db.query(Memory).filter(Memory.id == memory_id).first()
+    if not memory:
+        raise HTTPException(status_code=404, detail="Memory not found")
+    if memory.submitted_by != current_user.id and current_user.role.value not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    memory.title = title
+    memory.description = description or None
+    memory.year = year or None
+    memory.category = category or 'general'
+    db.commit()
+    return {"message": "Memory updated"}
 
 @router.delete("/memories/{memory_id}")
 def delete_memory(memory_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_approved_member)):
