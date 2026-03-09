@@ -642,7 +642,7 @@ async function loadMemories() {
                         return '<img src="https://ju18-alumni-production.up.railway.app/uploads/' + p + '" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;cursor:pointer;background:#f4f7fb;" onclick="openPhoto(this.src)">';
                     }).join('') + '</div>';
             }
-            var isOwner = m.submitted_by === currentUserId;
+            var isOwner = parseInt(m.submitted_by) === parseInt(currentUserId);
             var canDelete = isOwner || currentRole === 'admin' || currentRole === 'super_admin';
             var editBtn = isOwner ? '<button onclick="doEditMemory(' + m.id + ')" style="padding:4px 12px;background:#e8f0f8;color:#1a3a5c;border:1px solid #b8d0e8;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;margin-right:6px;">✏️ Edit</button>' : '';
             var deleteBtn = canDelete ? '<button onclick="deleteMemory(' + m.id + ')" style="padding:4px 12px;background:#fdecea;color:#e74c3c;border:1px solid #f5c6c2;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;">🗑 Delete</button>' : '';
@@ -650,7 +650,7 @@ async function loadMemories() {
                 '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
                 '<div><h3 style="color:var(--navy);font-size:16px;margin-bottom:4px;">' + (m.title || 'Untitled Memory') + '</h3>' +
                 '<p style="color:var(--muted);font-size:12px;">Shared by <strong>' + (m.author_name || 'Alumni') + '</strong> · ' + new Date(m.created_at).toLocaleDateString() + '</p></div>' +
-                deleteBtn + '</div>' +
+                editBtn + deleteBtn + '</div>' +
                 (m.description ? '<p style="color:var(--text);font-size:14px;margin-top:10px;line-height:1.6;">' + m.description + '</p>' : '') +
                 photosHtml + '</div>';
         }).join('');
