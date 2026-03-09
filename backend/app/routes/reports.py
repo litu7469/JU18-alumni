@@ -132,3 +132,32 @@ def export_events(db: Session = Depends(get_db), current_user: User = Depends(ge
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+@router.get("/event-registrations")
+def export_event_registrations(db: Session = Depends(get_db), current_user: User = Depends(get_admin_user)):
+    try:
+        from sqlalchemy import text
+        rows = db.execute(text("""
+            SELECT e.title, e.event_date, m.full_name, m.department, u.email, m.phone, er.registered_at
+            FROM event_registrations er
+            JOIN events e ON e.id = er.event_id
+            JOIN users u ON u.id = er.user_id
+            JOIN members m ON m.user_id = er.user_id
+            ORDER BY e.event_date DESC, m.full_name
+        """)).fetchall()
+    except Exception as ex:
+        rows = []
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Event", "Event Date", "Member Name", "Department", "Email", "Phone", "RSVP Date"])
+    for row in rows:
+        writer.writerow([str(c) if c else "" for c in row])
+
+    output.seek(0)
+    filename = f"event_registrations_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode("utf-8-sig")),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

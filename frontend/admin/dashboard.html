@@ -254,16 +254,26 @@ input:focus, select:focus, textarea:focus { border-color: #1a3a5c; }
 
     <!-- REPORTS -->
     <div class="section" id="section-reports">
-      <div class="section-title">Reports</div>
+      <div class="section-title">Reports &amp; Statistics</div>
       <div class="stats-grid">
         <div class="stat-card"><div class="num" id="r-total">-</div><div class="lbl">Total Members</div></div>
         <div class="stat-card"><div class="num" id="r-approved">-</div><div class="lbl">Approved</div></div>
         <div class="stat-card"><div class="num" id="r-pending">-</div><div class="lbl">Pending</div></div>
-        <div class="stat-card"><div class="num" id="r-events">-</div><div class="lbl">Events</div></div>
+        <div class="stat-card"><div class="num" id="r-events">-</div><div class="lbl">Total Events</div></div>
+        <div class="stat-card"><div class="num" id="r-rejected">-</div><div class="lbl">Rejected</div></div>
       </div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-        <button class="btn btn-primary" onclick="exportCSV('members')">⬇ Export Members CSV</button>
-        <button class="btn btn-primary" onclick="exportCSV('events')">⬇ Export Events CSV</button>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;">
+        <button class="btn btn-primary" onclick="exportCSV('members')">⬇ Members CSV</button>
+        <button class="btn btn-primary" onclick="exportCSV('events')">⬇ Events CSV</button>
+        <button class="btn btn-primary" onclick="exportCSV('event-registrations')">⬇ Event RSVPs CSV</button>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><h3>Members by Department</h3></div>
+        <div id="r-dept-list"><div class="empty">Loading...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Members by Hall</h3></div>
+        <div id="r-hall-list"><div class="empty">Loading...</div></div>
       </div>
     </div>
 
@@ -606,18 +616,49 @@ async function sendBulkEmail() {
 
 // ===== REPORTS =====
 async function loadReports() {
-    var r = await api('/api/admin/stats');
+    var r = await api('/api/reports/statistics');
     if (r.ok) {
-        document.getElementById('r-total').textContent = r.data.total_members || 0;
-        document.getElementById('r-approved').textContent = r.data.approved_members || 0;
-        document.getElementById('r-pending').textContent = r.data.pending_members || 0;
-        document.getElementById('r-events').textContent = r.data.total_events || 0;
+        document.getElementById('r-total').textContent = r.data.members.total || 0;
+        document.getElementById('r-approved').textContent = r.data.members.approved || 0;
+        document.getElementById('r-pending').textContent = r.data.members.pending || 0;
+        document.getElementById('r-rejected').textContent = r.data.members.rejected || 0;
+        document.getElementById('r-events').textContent = r.data.events.total || 0;
+
+        // Dept table
+        var deptEl = document.getElementById('r-dept-list');
+        if (r.data.by_department && r.data.by_department.length) {
+            var html = '<table><thead><tr><th>Department</th><th>Count</th></tr></thead><tbody>';
+            r.data.by_department.forEach(function(d) {
+                html += '<tr><td>' + d.department + '</td><td>' + d.count + '</td></tr>';
+            });
+            deptEl.innerHTML = html + '</tbody></table>';
+        } else { deptEl.innerHTML = '<div class="empty">No data</div>'; }
+
+        // Hall table
+        var hallEl = document.getElementById('r-hall-list');
+        if (r.data.by_hall && r.data.by_hall.length) {
+            var html = '<table><thead><tr><th>Hall</th><th>Count</th></tr></thead><tbody>';
+            r.data.by_hall.forEach(function(h) {
+                html += '<tr><td>' + h.hall + '</td><td>' + h.count + '</td></tr>';
+            });
+            hallEl.innerHTML = html + '</tbody></table>';
+        } else { hallEl.innerHTML = '<div class="empty">No data</div>'; }
     }
 }
 
 async function exportCSV(type) {
     var token = localStorage.getItem('access_token');
-    window.open(API_BASE + '/api/reports/' + type + '-csv?token=' + token, '_blank');
+    // Download via fetch to include auth header
+    var url = API_BASE + '/api/reports/' + type;
+    try {
+        var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!res.ok) { alert('Export failed: ' + res.status); return; }
+        var blob = await res.blob();
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = type + '_' + new Date().toISOString().substring(0,10) + '.csv';
+        a.click();
+    } catch(e) { alert('Export failed: ' + e.message); }
 }
 
 // ===== INIT =====
