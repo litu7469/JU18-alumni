@@ -16,9 +16,11 @@ class EventCreate(BaseModel):
     event_date: str
     event_time: Optional[str] = None
     venue: Optional[str] = None
+    location: Optional[str] = None
     event_type: Optional[str] = "general"
     is_rsvp_enabled: Optional[bool] = True
-    max_attendees: Optional[int] = None
+    is_published: Optional[bool] = True
+    max_attendees: Optional[int] = 0
 
 class EventUpdate(BaseModel):
     title: Optional[str] = None
@@ -126,16 +128,19 @@ def create_event(data: EventCreate, db: Session = Depends(get_db), current_user:
         title=data.title,
         description=data.description,
         event_date=datetime.strptime(data.event_date, "%Y-%m-%d").date(),
-        event_time=data.event_time if hasattr(Event, 'event_time') else None,
-        location=data.venue,
-        event_type=data.event_type or 'general',
-        registration_required=data.is_rsvp_enabled,
+        location=data.venue or data.location if hasattr(data, 'location') else data.venue,
         max_attendees=data.max_attendees,
         is_published=True,
         created_by=current_user.id,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
     )
+    # Set optional columns if they exist on the model
+    for col, val in [('event_time', data.event_time), ('event_type', data.event_type or 'general'), ('registration_required', data.is_rsvp_enabled), ('is_rsvp_enabled', data.is_rsvp_enabled)]:
+        try:
+            setattr(event, col, val)
+        except:
+            pass
     db.add(event)
     db.commit()
     db.refresh(event)
