@@ -10,6 +10,24 @@ import shutil, uuid, os
 
 router = APIRouter()
 
+def ensure_tables(db):
+    """Ensure event_registrations table exists"""
+    try:
+        from sqlalchemy import text
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS event_registrations (
+                id SERIAL PRIMARY KEY,
+                event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                registered_at TIMESTAMP DEFAULT NOW(),
+                UNIQUE(event_id, user_id)
+            )
+        """))
+        db.commit()
+    except Exception as e:
+        db.rollback()
+
+
 class EventCreate(BaseModel):
     title: str
     description: Optional[str] = None
@@ -85,6 +103,7 @@ def get_event(event_id: int, db: Session = Depends(get_db), current_user: User =
 
 @router.post("/{event_id}/rsvp")
 def toggle_rsvp(event_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_approved_member)):
+    ensure_tables(db)
     e = db.query(Event).filter(Event.id == event_id, Event.is_published == True).first()
     if not e:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -106,7 +125,7 @@ def toggle_rsvp(event_id: int, db: Session = Depends(get_db), current_user: User
                 count = db.query(EventRegistration).filter(EventRegistration.event_id == event_id).count()
                 if count >= max_att:
                     raise HTTPException(status_code=400, detail="Event is full")
-            rsvp = EventRegistration(event_id=event_id, user_id=current_user.id, created_at=datetime.utcnow())
+            rsvp = EventRegistration(event_id=event_id, user_id=current_user.id)
             db.add(rsvp)
             db.commit()
             return {"message": "RSVP confirmed", "rsvpd": True}
