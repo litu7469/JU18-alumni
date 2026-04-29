@@ -549,36 +549,10 @@
         <!-- Upcoming Events Section -->
         <section class="section">
             <h2>Upcoming Events</h2>
-            <div class="events-grid">
-                <div class="event-card">
-                    <div class="event-date">
-                        <div class="day">15</div>
-                        <div class="month">March 2026</div>
-                    </div>
-                    <div class="event-content">
-                        <h4>Annual Reunion 2026</h4>
-                        <p>Join us for our annual reunion at JU campus. A day filled with memories, networking, and celebration.</p>
-                    </div>
-                </div>
-                <div class="event-card">
-                    <div class="event-date">
-                        <div class="day">25</div>
-                        <div class="month">April 2026</div>
-                    </div>
-                    <div class="event-content">
-                        <h4>Networking Meetup</h4>
-                        <p>Professional networking event for career growth and collaboration opportunities among alumni.</p>
-                    </div>
-                </div>
-                <div class="event-card">
-                    <div class="event-date">
-                        <div class="day">10</div>
-                        <div class="month">May 2026</div>
-                    </div>
-                    <div class="event-content">
-                        <h4>Alumni Sports Day</h4>
-                        <p>Sports and recreation day with cricket, football, and various games for alumni and families.</p>
-                    </div>
+            <div class="events-grid" id="homepage-events-grid">
+                <!-- Loaded dynamically from API -->
+                <div class="event-card" style="grid-column:1/-1;text-align:center;color:#95a5a6;padding:40px;">
+                    Loading events...
                 </div>
             </div>
         </section>
@@ -687,6 +661,64 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function doLogout() { localStorage.clear(); window.location.reload(); }
+
+// ── Load latest 3 events from API ──────────────────────────────────────────
+const API = "https://ju18-alumni-production.up.railway.app";
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function formatEventDate(dateStr) {
+    if (!dateStr) return { day: "?", month: "?" };
+    var d = new Date(dateStr);
+    return {
+        day: d.getDate(),
+        month: MONTHS[d.getMonth()] + " " + d.getFullYear()
+    };
+}
+
+function renderEvents(events) {
+    var grid = document.getElementById("homepage-events-grid");
+    if (!grid) return;
+
+    if (!events || events.length === 0) {
+        grid.innerHTML = '<div class="event-card" style="grid-column:1/-1;text-align:center;color:#95a5a6;padding:40px;">No upcoming events at the moment. Check back soon!</div>';
+        return;
+    }
+
+    grid.innerHTML = events.map(function(e) {
+        var date = formatEventDate(e.event_date);
+        var desc = e.description
+            ? (e.description.length > 100 ? e.description.substring(0, 100) + "..." : e.description)
+            : "Join us for this alumni event.";
+        var isUpcoming = e.is_upcoming;
+        var badge = isUpcoming
+            ? '<span style="background:#27ae60;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;">UPCOMING</span>'
+            : '<span style="background:#95a5a6;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;">RECENT</span>';
+        return [
+            '<div class="event-card">',
+            '  <div class="event-date">',
+            '    <div class="day">' + date.day + '</div>',
+            '    <div class="month">' + date.month + '</div>',
+            '  </div>',
+            '  <div class="event-content">',
+            '    <h4>' + (e.title || "Alumni Event") + ' ' + badge + '</h4>',
+            '    <p>' + desc + '</p>',
+            '    ' + (e.location ? '<p style="font-size:12px;color:#7f8c8d;margin-top:4px;">📍 ' + e.location + '</p>' : ''),
+            '  </div>',
+            '</div>'
+        ].join('\n');
+    }).join('');
+}
+
+fetch(API + "/api/public/homepage")
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        renderEvents(data.events || []);
+    })
+    .catch(function(err) {
+        console.error("Failed to load events:", err);
+        var grid = document.getElementById("homepage-events-grid");
+        if (grid) grid.innerHTML = '<div class="event-card" style="grid-column:1/-1;text-align:center;color:#95a5a6;padding:40px;">Could not load events. Please try again later.</div>';
+    });
 
 function requireLogin(e) {
     e.preventDefault();
