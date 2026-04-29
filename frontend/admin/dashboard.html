@@ -499,7 +499,7 @@ async function loadEvents() {
     var html = '<table><thead><tr><th>Title</th><th>Date</th><th>Location</th><th>RSVPs</th><th>Actions</th></tr></thead><tbody>';
     list.forEach(function(e) {
         html += '<tr><td><strong>' + e.title + '</strong></td><td>' + (e.event_date||'').substring(0,10) + '</td><td>' + (e.location||'-') + '</td>' +
-            '<td>' + (e.rsvp_count||0) + '</td>' +
+            '<td><span style="background:#1a3a5c;color:white;border-radius:10px;padding:2px 8px;font-size:12px;cursor:pointer;" onclick="viewAttendees(' + e.id + ',\'' + e.title.replace(/\'/g,\'\') + '\')">👥 ' + (e.rsvp_count||0) + '</span></td>' +
             '<td style="display:flex;gap:6px;">' +
             '<button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="editEvent(' + e.id + ')">Edit</button>' +
             '<button class="btn btn-danger" style="font-size:12px;padding:5px 10px;" onclick="deleteEvent(' + e.id + ')">Delete</button>' +
@@ -690,6 +690,57 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('admin-hidden').style.display = 'block';
     }
     loadStats();
+});
+</script>
+
+<!-- Attendees Modal -->
+<div class="modal-backdrop" id="attendees-modal">
+  <div class="modal" style="max-width:640px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="margin:0;" id="attendees-modal-title">Event Attendees</h3>
+      <button onclick="closeAttendeesModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#95a5a6;line-height:1;">✕</button>
+    </div>
+    <div id="attendees-modal-body"><div class="empty">Loading...</div></div>
+  </div>
+</div>
+
+<script>
+async function viewAttendees(eventId, eventTitle) {
+    document.getElementById('attendees-modal-title').textContent = '👥 ' + eventTitle;
+    document.getElementById('attendees-modal-body').innerHTML = '<div class="empty">Loading...</div>';
+    document.getElementById('attendees-modal').classList.add('show');
+
+    var r = await api('/api/events/admin/' + eventId + '/attendees');
+    var list = Array.isArray(r.data) ? r.data : [];
+    var body = document.getElementById('attendees-modal-body');
+
+    if (!list.length) {
+        body.innerHTML = '<div class="empty">No one has RSVP\'d yet.</div>';
+        return;
+    }
+
+    var html = '<p style="color:#7f8c8d;font-size:13px;margin-bottom:12px;">Total: <strong>' + list.length + ' member(s)</strong></p>';
+    html += '<table><thead><tr><th>#</th><th>Name</th><th>Department</th><th>Phone</th><th>RSVP Date</th></tr></thead><tbody>';
+    list.forEach(function(m, i) {
+        html += '<tr>' +
+            '<td>' + (i+1) + '</td>' +
+            '<td><strong>' + (m.full_name||'Unknown') + '</strong></td>' +
+            '<td>' + (m.department||'-') + '</td>' +
+            '<td>' + (m.phone||'-') + '</td>' +
+            '<td>' + (m.rsvp_date||'').substring(0,10) + '</td>' +
+            '</tr>';
+    });
+    html += '</tbody></table>';
+    body.innerHTML = html;
+}
+
+function closeAttendeesModal() {
+    document.getElementById('attendees-modal').classList.remove('show');
+}
+
+// Close modal on backdrop click
+document.getElementById('attendees-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeAttendeesModal();
 });
 </script>
 </body>
