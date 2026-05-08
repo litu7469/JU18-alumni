@@ -1,42 +1,55 @@
 // ── JU 18th Batch Alumni — Auth Helper ──────────────────────
 const API_BASE = window.API_BASE || 'http://localhost:8000';
 
-const Auth = {
-    getToken()   { return localStorage.getItem('access_token'); },
-    getRefreshToken() { return localStorage.getItem('refresh_token'); },
-    getUser()    { const u = localStorage.getItem('user'); return u ? JSON.parse(u) : null; },
-    isLoggedIn() { return !!this.getToken(); },
-    isApproved() { const u = this.getUser(); return u && u.registration_status === 'approved'; },
-    isAdmin()    { const u = this.getUser(); return u && (u.role === 'admin' || u.role === 'super_admin'); },
+// ── Departments ───────────────────────────────────────────────
+const DEPARTMENTS = [
+    "Bangla", "English", "History", "Philosophy", "Dramatics",
+    "Statistics", "Mathematics", "Physics", "Chemistry", "Economics",
+    "Geography", "Government & Politics", "Anthropology", "Geology",
+    "Zoology", "Botany", "Pharmacy"
+];
 
-    // ── Refresh access token using refresh token ──
+// Populate any <select> element with department options
+function populateDepartmentSelect(selectId, includeAll = false) {
+    var el = document.getElementById(selectId);
+    if (!el) return;
+    var html = includeAll
+        ? '<option value="">All Departments</option>'
+        : '<option value="">Select Department</option>';
+    DEPARTMENTS.forEach(function(d) {
+        html += '<option value="' + d + '">' + d + '</option>';
+    });
+    el.innerHTML = html;
+}
+
+const Auth = {
+    getToken()        { return localStorage.getItem('access_token'); },
+    getRefreshToken() { return localStorage.getItem('refresh_token'); },
+    getUser()         { const u = localStorage.getItem('user'); return u ? JSON.parse(u) : null; },
+    isLoggedIn()      { return !!this.getToken(); },
+    isApproved()      { const u = this.getUser(); return u && u.registration_status === 'approved'; },
+    isAdmin()         { const u = this.getUser(); return u && (u.role === 'admin' || u.role === 'super_admin'); },
+
     async refreshAccessToken() {
         const refreshToken = this.getRefreshToken();
         if (!refreshToken) return false;
-
         try {
             const res = await fetch(`${API_BASE}/api/auth/refresh`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refresh_token: refreshToken })
             });
-
             if (res.ok) {
                 const data = await res.json();
                 if (data.access_token) {
                     localStorage.setItem('access_token', data.access_token);
-                    console.log('Access token refreshed successfully');
                     return true;
                 }
             }
-        } catch (e) {
-            console.error('Token refresh failed:', e);
-        }
-
+        } catch (e) { console.error('Token refresh failed:', e); }
         return false;
     },
 
-    // ── Main request helper with auto refresh on 401 ──
     async request(path, options = {}, retry = true) {
         const token = this.getToken();
         const res = await fetch(`${API_BASE}${path}`, {
@@ -47,20 +60,12 @@ const Auth = {
                 ...(options.headers || {})
             }
         });
-
-        // If 401 and we haven't retried yet, try refreshing the token
         if (res.status === 401 && retry) {
             const refreshed = await this.refreshAccessToken();
-            if (refreshed) {
-                // Retry the original request with the new token
-                return this.request(path, options, false);
-            } else {
-                // Refresh also failed — session is truly expired
-                this.logout();
-                return null;
-            }
+            if (refreshed) return this.request(path, options, false);
+            this.logout();
+            return null;
         }
-
         return res;
     },
 
@@ -71,23 +76,13 @@ const Auth = {
         window.location.href = '/pages/login.html';
     },
 
-    requireAuth() {
-        if (!this.isLoggedIn()) { window.location.href = '/pages/login.html'; return false; }
-        return true;
-    },
-
+    requireAuth()    { if (!this.isLoggedIn()) { window.location.href = '/pages/login.html'; return false; } return true; },
     requireApproved() {
         if (!this.isLoggedIn()) { window.location.href = '/pages/login.html'; return false; }
-        if (!this.isApproved() && !this.isAdmin()) {
-            window.location.href = '/pages/pending.html'; return false;
-        }
+        if (!this.isApproved() && !this.isAdmin()) { window.location.href = '/pages/pending.html'; return false; }
         return true;
     },
-
-    requireAdmin() {
-        if (!this.isAdmin()) { window.location.href = '/index.html'; return false; }
-        return true;
-    },
+    requireAdmin()   { if (!this.isAdmin()) { window.location.href = '/index.html'; return false; } return true; },
 
     updateNavbar() {
         const user = this.getUser();
