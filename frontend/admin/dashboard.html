@@ -319,7 +319,28 @@ function showSection(name) {
     if (name === 'reports') loadReports();
 }
 
-async function api(path, options) {
+async function refreshAccessToken() {
+    var rt = localStorage.getItem('refresh_token');
+    if (!rt) return false;
+    try {
+        var res = await fetch(API_BASE + '/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: rt })
+        });
+        if (res.ok) {
+            var data = await res.json();
+            if (data.access_token) {
+                localStorage.setItem('access_token', data.access_token);
+                return true;
+            }
+        }
+    } catch(e) { console.error('Token refresh failed:', e); }
+    return false;
+}
+
+async function api(path, options, retry) {
+    retry = (retry === undefined) ? true : retry;
     var token = localStorage.getItem('access_token');
     var opts = options || {};
     opts.headers = opts.headers || {};
@@ -329,6 +350,20 @@ async function api(path, options) {
     }
     try {
         var res = await fetch(API_BASE + path, opts);
+
+        // Auto-refresh on 401
+        if (res.status === 401 && retry) {
+            var refreshed = await refreshAccessToken();
+            if (refreshed) return api(path, options, false);
+            logout(); return { ok: false, status: 401, data: { detail: 'Session expired' } };
+        }
+
+        // Redirect to login if not admin
+        if (res.status === 403) {
+            showAlert('global-alert', 'error', 'Access denied. Please log in as admin.');
+            return { ok: false, status: 403, data: { detail: 'Forbidden' } };
+        }
+
         var data = await res.json();
         return { ok: res.ok, status: res.status, data: data };
     } catch(e) {
@@ -667,7 +702,7 @@ async function exportCSV(type) {
     // Download via fetch to include auth header
     var url = API_BASE + '/api/reports/' + type;
     try {
-        var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+        var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } });
         if (!res.ok) { alert('Export failed: ' + res.status); return; }
         var blob = await res.blob();
         var a = document.createElement('a');
