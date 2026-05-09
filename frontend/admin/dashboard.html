@@ -526,7 +526,7 @@ async function loadEvents() {
     var html = '<table><thead><tr><th>Title</th><th>Date</th><th>Location</th><th>RSVPs</th><th>Actions</th></tr></thead><tbody>';
     list.forEach(function(e) {
         html += '<tr><td><strong>' + e.title + '</strong></td><td>' + (e.event_date||'').substring(0,10) + '</td><td>' + (e.location||'-') + '</td>' +
-            '<td><span style="background:#1a3a5c;color:white;border-radius:10px;padding:2px 8px;font-size:12px;cursor:pointer;" onclick="viewAttendees(' + e.id + ',\'' + e.title.replace(/\'/g,\'\') + '\')">👥 ' + (e.rsvp_count||0) + '</span></td>' +
+            '<td><span style="background:#1a3a5c;color:white;border-radius:10px;padding:2px 8px;font-size:12px;cursor:pointer;" onclick="viewAttendees(' + e.id + ', this)">\ud83d\udc65 ' + (e.rsvp_count||0) + '</span></td>' +
             '<td style="display:flex;gap:6px;">' +
             '<button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="editEvent(' + e.id + ')">Edit</button>' +
             '<button class="btn btn-danger" style="font-size:12px;padding:5px 10px;" onclick="deleteEvent(' + e.id + ')">Delete</button>' +
@@ -732,7 +732,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
-async function viewAttendees(eventId, eventTitle) {
+async function viewAttendees(eventId, el) {
+    var eventTitle = el ? el.closest('tr').querySelector('td strong').textContent : 'Event';
     document.getElementById('attendees-modal-title').textContent = '👥 ' + eventTitle;
     document.getElementById('attendees-modal-body').innerHTML = '<div class="empty">Loading...</div>';
     document.getElementById('attendees-modal').classList.add('show');
