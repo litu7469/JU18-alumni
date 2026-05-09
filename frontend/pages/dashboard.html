@@ -353,10 +353,29 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 const API_BASE = 'https://ju18-alumni-production.up.railway.app';
 let searchTimeout;
 
+// ── Token helpers ─────────────────────────────────────────
+function getToken() { return localStorage.getItem('access_token'); }
+function getRefreshToken() { return localStorage.getItem('refresh_token'); }
+async function refreshAccessToken() {
+    var rt = getRefreshToken();
+    if (!rt) return false;
+    try {
+        var res = await fetch(API_BASE + '/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: rt })
+        });
+        if (res.ok) {
+            var data = await res.json();
+            if (data.access_token) { localStorage.setItem('access_token', data.access_token); return true; }
+        }
+    } catch(e) { console.error('Refresh failed:', e); }
+    return false;
+}
+
 // Auth check
-const token = localStorage.getItem('access_token');
 const user = JSON.parse(localStorage.getItem('user') || '{}');
-if (!token) { window.location.href = 'https://ju18-alumni-production.up.railway.app/pages/login.html'; }
+if (!getToken()) { window.location.href = 'https://ju18-alumni-production.up.railway.app/pages/login.html'; }
 // Set header username
 var headerName = document.getElementById('header-username');
 if (headerName && user.full_name) {
@@ -393,9 +412,13 @@ function showSection(name) {
     if (name === 'profile') loadProfile();
 }
 
-async function apiGet(path) {
-    const res = await fetch(`${API_BASE}${path}`, { headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.status === 401) { logout(); return null; }
+async function apiGet(path, retry = true) {
+    const res = await fetch(`${API_BASE}${path}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+    if (res.status === 401 && retry) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) return apiGet(path, false);
+        logout(); return null;
+    }
     return res.json();
 }
 
@@ -519,7 +542,7 @@ function searchDirectory() {
 async function loadEvents() {
     const list = document.getElementById('events-list');
     list.innerHTML = '<div class="loading">Loading events...</div>';
-    const res = await fetch(`${API_BASE}/api/events`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const res = await fetch(`${API_BASE}/api/events`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
     if (!res.ok) { list.innerHTML = '<div class="no-results">Failed to load events.</div>'; return; }
     const data = await res.json();
     if (!data.length) { list.innerHTML = '<div class="no-results">No upcoming events. Check back soon!</div>'; return; }
@@ -562,7 +585,7 @@ async function toggleRSVP(eventId) {
     if (btn) { btn.disabled = true; btn.textContent = '...'; }
     const res = await fetch(`${API_BASE}/api/events/${eventId}/rsvp`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${getToken()}` }
     });
     const data = await res.json();
     if (res.ok) {
@@ -585,7 +608,7 @@ async function changePassword() {
 
     const res = await fetch(`${API_BASE}/api/auth/change-password`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
         body: JSON.stringify({ current_password: current, new_password: newPw })
     });
     const data = await res.json();
@@ -638,7 +661,7 @@ async function loadMemories() {
     const container = document.getElementById('memories-list');
     try {
         const res = await fetch(`${API_BASE}/api/members/memories`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${getToken()}` }
         });
         const data = await res.json();
         if (!data || data.length === 0) {
@@ -708,7 +731,7 @@ async function submitMemory() {
 
     const res = await fetch(`${API_BASE}/api/members/memories`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { 'Authorization': `Bearer ${getToken()}` },
         body: formData
     });
     btn.disabled = false;
@@ -730,7 +753,7 @@ function doEditMemory(id) {
     if (!newTitle) return;
     fetch(API_BASE + '/api/members/memories/' + id, {
         method: 'PUT',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'title=' + encodeURIComponent(newTitle)
     }).then(function(r) {
         if (r.ok) loadMemories();
@@ -742,7 +765,7 @@ async function deleteMemory(id) {
     if (!confirm('Delete this memory? This cannot be undone.')) return;
     const res = await fetch(`${API_BASE}/api/members/memories/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${getToken()}` }
     });
     if (res.ok) {
         loadMemories();
@@ -769,7 +792,7 @@ async function uploadProfilePhoto(input) {
 
     const res = await fetch(`${API_BASE}/api/members/profile/photo`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { 'Authorization': `Bearer ${getToken()}` },
         body: formData
     });
     const data = await res.json();
@@ -803,7 +826,7 @@ async function uploadProfilePhoto(input) {
     formData.append('photo', file);
     const res = await fetch(`${API_BASE}/api/members/profile/photo`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { 'Authorization': `Bearer ${getToken()}` },
         body: formData
     });
     const data = await res.json();
@@ -823,7 +846,7 @@ async function uploadProfilePhoto(input) {
 
 
 async function loadAnnouncementsBar() {
-    const res = await fetch(`${API_BASE}/api/announcements`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const res = await fetch(`${API_BASE}/api/announcements`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
     if (!res.ok) return;
     const data = await res.json();
     if (!data.length) return;
