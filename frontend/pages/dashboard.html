@@ -498,11 +498,14 @@ async function saveProfile() {
     alertEl.textContent = result.ok ? '✅ Profile updated successfully!' : (result.data.detail || 'Update failed');
     alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    if (result.ok && data.full_name) {
-        document.getElementById('sidebar-name').textContent = data.full_name;
-        const u = JSON.parse(localStorage.getItem('user') || '{}');
-        u.full_name = data.full_name;
-        localStorage.setItem('user', JSON.stringify(u));
+    if (result.ok) {
+        // Reload profile from server to confirm saved data
+        await loadProfile();
+        if (data.full_name) {
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            u.full_name = data.full_name;
+            localStorage.setItem('user', JSON.stringify(u));
+        }
     }
 }
 
