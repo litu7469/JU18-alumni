@@ -1,33 +1,39 @@
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
+from typing import Optional
 from app.core.database import get_db
 from app.core.auth_middleware import get_admin_user
 from app.core.security import generate_token
 from app.models.models import User, Member, UserRole, RegistrationStatus, Event, Memory, Message
 from app.schemas.schemas import AdminApproveRequest
 from app.services.email_service import send_set_password_email, send_rejection_email
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
 
 @router.get("/stats")
 def get_stats(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
     return {
-        "total_members": db.query(User).filter(User.registration_status == RegistrationStatus.APPROVED).count(),
-        "pending_approvals": db.query(User).filter(User.registration_status == RegistrationStatus.EMAIL_VERIFIED).count(),
-        "total_registrations": db.query(User).count(),
-        "total_events": db.query(Event).count(),
-        "total_memories": db.query(Memory).count(),
-        "total_messages": db.query(Message).count(),
+        "total_members":      db.query(User).filter(User.registration_status == RegistrationStatus.APPROVED).count(),
+        "pending_approvals":  db.query(User).filter(User.registration_status == RegistrationStatus.EMAIL_VERIFIED).count(),
+        "total_registrations": db.query(User).filter(User.role == UserRole.MEMBER).count(),
+        "total_events":       db.query(Event).count(),
+        "total_memories":     db.query(Memory).count(),
+        "total_messages":     db.query(Message).count(),
     }
+
 
 @router.get("/pending-members")
 def get_pending_members(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
     users = db.query(User).filter(
-        User.registration_status == RegistrationStatus.EMAIL_VERIFIED
-    ).all()
+        User.registration_status == RegistrationStatus.EMAIL_VERIFIED,
+        User.role == UserRole.MEMBER
+    ).order_by(User.created_at.desc()).all()
+
     result = []
     for u in users:
         m = u.member
@@ -42,9 +48,11 @@ def get_pending_members(db: Session = Depends(get_db), admin: User = Depends(get
         })
     return result
 
+
 @router.post("/approve-member")
 def approve_member(
     data: AdminApproveRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
@@ -52,35 +60,48 @@ def approve_member(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Prevent approving admin account
+    if user.role in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=400, detail="Cannot change approval status of admin accounts")
+
     member = user.member
 
     if data.action == "approve":
-        # Generate set-password token
         token = generate_token()
         user.registration_status = RegistrationStatus.APPROVED
         user.reset_password_token = token
-        user.reset_password_expires = datetime.utcnow() + timedelta(hours=24)
+        user.reset_password_expires = datetime.now(timezone.utc) + timedelta(hours=48)
         if member:
             member.approved_by = admin.id
-            member.approved_at = datetime.utcnow()
+            member.approved_at = datetime.now(timezone.utc)
         db.commit()
-        # Send set-password email
-        send_set_password_email(user.email, member.full_name if member else "Alumni", token)
-        return {"message": f"{member.full_name if member else user.email} approved! Set-password email sent."}
+
+        name = member.full_name if member else "Alumni"
+        background_tasks.add_task(send_set_password_email, user.email, name, token)
+        logger.info(f"Admin {admin.id} approved user {user.id} ({user.email})")
+        return {"message": f"{name} approved! Password setup email sent."}
 
     elif data.action == "reject":
         user.registration_status = RegistrationStatus.REJECTED
         if member:
             member.rejected_reason = data.reason
         db.commit()
-        send_rejection_email(user.email, member.full_name if member else "Alumni", data.reason or "")
+
+        name = member.full_name if member else "Alumni"
+        background_tasks.add_task(send_rejection_email, user.email, name, data.reason or "")
+        logger.info(f"Admin {admin.id} rejected user {user.id} ({user.email})")
         return {"message": "Member rejected and notified."}
 
     raise HTTPException(status_code=400, detail="Invalid action. Use 'approve' or 'reject'.")
 
+
 @router.get("/all-members")
 def get_all_members(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
-    users = db.query(User).all()
+    # Exclude super admin from the list
+    users = db.query(User).filter(
+        User.role != UserRole.SUPER_ADMIN
+    ).order_by(User.created_at.desc()).all()
+
     result = []
     for u in users:
         m = u.member
@@ -91,34 +112,105 @@ def get_all_members(db: Session = Depends(get_db), admin: User = Depends(get_adm
             "full_name": m.full_name if m else "N/A",
             "department": m.department if m else None,
             "registration_status": u.registration_status,
+            "is_active": u.is_active,
             "created_at": u.created_at,
             "last_login": u.last_login,
         })
     return result
 
-class RoleUpdateRequest(BaseModel):
-    role: str
 
-@router.put("/member/{user_id}/role")
-def update_role(user_id: int, data: RoleUpdateRequest, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+@router.post("/member/{user_id}/make-admin")
+def make_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    # Only super admin can assign admin role
     if admin.role != UserRole.SUPER_ADMIN:
-        raise HTTPException(status_code=403, detail="Only super admin can change roles")
+        raise HTTPException(status_code=403, detail="Only super admin can assign admin role")
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.role == UserRole.SUPER_ADMIN:
         raise HTTPException(status_code=403, detail="Cannot change super admin role")
-    user.role = data.role
+    if user.registration_status != RegistrationStatus.APPROVED:
+        raise HTTPException(status_code=400, detail="User must be an approved member first")
+    if user.id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot change your own role")
+
+    user.role = UserRole.ADMIN
     db.commit()
-    return {"message": f"Role updated to {data.role}"}
+    logger.info(f"Super admin {admin.id} made user {user_id} an admin")
+    return {"message": f"{user.email} is now an Admin"}
+
+
+@router.post("/member/{user_id}/revoke-admin")
+def revoke_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    # Only super admin can revoke admin role
+    if admin.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can revoke admin role")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role == UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Cannot change super admin role")
+    if user.id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot change your own role")
+
+    user.role = UserRole.MEMBER
+    db.commit()
+    logger.info(f"Super admin {admin.id} revoked admin from user {user_id}")
+    return {"message": f"{user.email} admin role revoked"}
+
+
+@router.post("/member/{user_id}/toggle-active")
+def toggle_active(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role == UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Cannot disable super admin")
+    if user.id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot disable your own account")
+
+    user.is_active = not user.is_active
+    db.commit()
+    status = "enabled" if user.is_active else "disabled"
+    logger.info(f"Admin {admin.id} {status} user {user_id}")
+    return {"message": f"Account {status}", "is_active": user.is_active}
+
 
 @router.delete("/member/{user_id}")
-def delete_member(user_id: int, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+def delete_member(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    # Only super admin can delete
+    if admin.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super admin can delete members")
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.role == UserRole.SUPER_ADMIN:
         raise HTTPException(status_code=403, detail="Cannot delete super admin")
-    db.delete(user)
+    if user.id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+
+    # Soft delete — deactivate instead of hard delete to preserve data integrity
+    user.is_active = False
+    user.registration_status = RegistrationStatus.REJECTED
     db.commit()
-    return {"message": "Member deleted"}
+    logger.info(f"Super admin {admin.id} soft-deleted user {user_id}")
+    return {"message": "Member removed successfully"}
