@@ -199,6 +199,14 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
                     <div class="field"><label>Date of Birth</label><input type="date" id="p-date_of_birth"></div>
                 </div>
 
+                <div class="field-section-title">🏠 Address Information</div>
+                <div class="form-group single">
+                    <div class="field"><label>Current Address</label><textarea id="p-current_address" rows="2" placeholder="Your current residential address"></textarea></div>
+                </div>
+                <div class="form-group single">
+                    <div class="field"><label>Permanent Address</label><textarea id="p-permanent_address" rows="2" placeholder="Your permanent home address"></textarea></div>
+                </div>
+
                 <div class="field-section-title">🎓 Academic Information</div>
                 <div class="form-group">
                     <div class="field"><label>Department</label><input type="text" id="p-department" readonly style="background:#f5f5f5;cursor:not-allowed;"></div>
@@ -422,7 +430,7 @@ async function init() {
 async function loadProfile() {
     const p = await apiGet('/api/members/profile');
     if (!p) return;
-    ['full_name','nick_name','email','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department'].forEach(f => {
+    ['full_name','nick_name','email','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address'].forEach(f => {
         const el = document.getElementById(`p-${f}`);
         if (el) el.value = p[f] || '';
     });
@@ -444,7 +452,7 @@ async function loadProfile() {
 }
 async function saveProfile() {
     const data = {};
-    ['full_name','nick_name','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth'].forEach(f => {
+    ['full_name','nick_name','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','current_address','permanent_address'].forEach(f => {
         const el = document.getElementById(`p-${f}`);
         if (el) data[f] = el.value || null;
     });
