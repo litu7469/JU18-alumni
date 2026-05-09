@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form, Request
 from sqlalchemy.orm import Session
 from datetime import datetime
 from app.core.database import get_db
@@ -42,11 +42,26 @@ def get_profile(db: Session = Depends(get_db), current_user: User = Depends(get_
     }
 
 @router.put("/profile")
-def update_profile(data: dict, db: Session = Depends(get_db), current_user: User = Depends(get_approved_member)):
+async def update_profile(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_approved_member)):
+    try:
+        data = await request.json()
+    except Exception:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+
     member = db.query(Member).filter(Member.user_id == current_user.id).first()
     if not member:
         raise HTTPException(status_code=404, detail="Profile not found")
-    allowed = ["full_name", "nick_name", "phone", "whatsapp", "profession", "organization", "designation", "bio", "batch_roll", "session", "linkedin", "facebook", "current_location", "current_address", "permanent_address", "date_of_birth", "hall"]
+
+    allowed = [
+        "full_name", "nick_name", "phone", "whatsapp",
+        "profession", "organization", "designation",
+        "bio", "batch_roll", "session",
+        "linkedin", "facebook",
+        "current_location", "current_address", "permanent_address",
+        "date_of_birth", "hall",
+        "show_in_directory", "show_phone", "show_email"
+    ]
     for key, value in data.items():
         if key in allowed and hasattr(member, key):
             setattr(member, key, value)

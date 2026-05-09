@@ -399,11 +399,16 @@ async function apiGet(path) {
     return res.json();
 }
 
-async function apiPut(path, data) {
+async function apiPut(path, data, retry = true) {
     const res = await fetch(`${API_BASE}${path}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
         body: JSON.stringify(data)
     });
+    if (res.status === 401 && retry) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) return apiPut(path, data, false);
+        logout(); return { ok: false, data: { detail: 'Session expired' } };
+    }
     return { ok: res.ok, data: await res.json() };
 }
 
