@@ -474,14 +474,21 @@ async function init() {
         document.getElementById('sidebar-avatar').innerHTML = `<img src="${profile.profile_photo}" alt="Photo">`;
     }
 
-    // Stats
-    const pub = await fetch(`${API_BASE}/api/public/homepage`).then(r => r.json()).catch(() => null);
-    if (pub) {
-        // Get member count from directory (approved members)
+    // Stats - fetch member count independently
+    try {
         const membersData = await apiGet('/api/members/directory');
-        const memberCount = Array.isArray(membersData) ? membersData.length : (membersData?.members?.length || '—');
+        const memberCount = Array.isArray(membersData) ? membersData.length : (membersData?.members?.length || 0);
         document.getElementById('stat-members').textContent = memberCount;
-        document.getElementById('stat-events').textContent = pub.events?.length || '0';
+    } catch(e) {
+        document.getElementById('stat-members').textContent = '—';
+    }
+    // Upcoming events count
+    try {
+        const eventsData = await apiGet('/api/events');
+        const upcoming = Array.isArray(eventsData) ? eventsData.filter(e => new Date(e.event_date) >= new Date()).length : 0;
+        document.getElementById('stat-events').textContent = upcoming;
+    } catch(e) {
+        document.getElementById('stat-events').textContent = '0';
     }
 }
 
