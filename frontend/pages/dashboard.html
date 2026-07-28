@@ -198,6 +198,15 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
                     <div class="field"><label>WhatsApp</label><input type="tel" id="p-whatsapp"></div>
                     <div class="field"><label>Date of Birth</label><input type="date" id="p-date_of_birth"></div>
                 </div>
+                <div class="field-section-title">🏠 Address Information</div>
+                <div class="form-group single">
+                    <div class="field"><label>Current Address</label><textarea id="p-current_address" rows="2" placeholder="Your current residential address" style="width:100%;padding:10px;border:1.5px solid #dde3ea;border-radius:6px;font-family:inherit;font-size:14px;resize:vertical;"></textarea></div>
+                </div>
+                <div class="form-group single">
+                    <div class="field"><label>Permanent Address</label><textarea id="p-permanent_address" rows="2" placeholder="Your permanent home address" style="width:100%;padding:10px;border:1.5px solid #dde3ea;border-radius:6px;font-family:inherit;font-size:14px;resize:vertical;"></textarea></div>
+                </div>
+                <div class="form-group">
+                </div>
 
                 <div class="field-section-title">🎓 Academic Information</div>
                 <div class="form-group">
@@ -363,7 +372,6 @@ async function refreshAccessToken() {
     } catch(e) { console.error('Refresh failed:', e); }
     return false;
 }
-
 // Auth check
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 if (!getToken()) { window.location.href = 'https://ju18-alumni-production.up.railway.app/pages/login.html'; }
@@ -468,7 +476,7 @@ async function saveProfile() {
     const data = {};
     ['full_name','nick_name','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address'].forEach(f => {
         const el = document.getElementById(`p-${f}`);
-        if (el && el.value !== '') data[f] = el.value;
+        if (el && el.value.trim() !== '') data[f] = el.value.trim();
     });
     const hallEl = document.getElementById('p-hall');
     if (hallEl) data.hall = hallEl.value || null;
@@ -484,11 +492,14 @@ async function saveProfile() {
     alertEl.textContent = result.ok ? '✅ Profile updated successfully!' : (result.data.detail || 'Update failed');
     alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    if (result.ok && data.full_name) {
-        document.getElementById('sidebar-name').textContent = data.full_name;
-        const u = JSON.parse(localStorage.getItem('user') || '{}');
-        u.full_name = data.full_name;
-        localStorage.setItem('user', JSON.stringify(u));
+    if (result.ok) {
+        await loadProfile();
+        if (data.full_name) {
+            document.getElementById('sidebar-name').textContent = data.full_name;
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            u.full_name = data.full_name;
+            localStorage.setItem('user', JSON.stringify(u));
+        }
     }
 }
 
