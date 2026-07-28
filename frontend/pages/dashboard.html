@@ -199,14 +199,6 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
                     <div class="field"><label>Date of Birth</label><input type="date" id="p-date_of_birth"></div>
                 </div>
 
-                <div class="field-section-title">🏠 Address Information</div>
-                <div class="form-group single">
-                    <div class="field"><label>Current Address</label><textarea id="p-current_address" rows="2" placeholder="Your current residential address"></textarea></div>
-                </div>
-                <div class="form-group single">
-                    <div class="field"><label>Permanent Address</label><textarea id="p-permanent_address" rows="2" placeholder="Your permanent home address"></textarea></div>
-                </div>
-
                 <div class="field-section-title">🎓 Academic Information</div>
                 <div class="form-group">
                     <div class="field"><label>Department</label><input type="text" id="p-department" readonly style="background:#f5f5f5;cursor:not-allowed;"></div>
@@ -353,7 +345,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 const API_BASE = 'https://ju18-alumni-production.up.railway.app';
 let searchTimeout;
 
-// ── Token helpers ─────────────────────────────────────────
+// ── Token helpers ──────────────────────────────────────────
 function getToken() { return localStorage.getItem('access_token'); }
 function getRefreshToken() { return localStorage.getItem('refresh_token'); }
 async function refreshAccessToken() {
@@ -361,13 +353,12 @@ async function refreshAccessToken() {
     if (!rt) return false;
     try {
         var res = await fetch(API_BASE + '/api/auth/refresh', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh_token: rt })
         });
         if (res.ok) {
-            var data = await res.json();
-            if (data.access_token) { localStorage.setItem('access_token', data.access_token); return true; }
+            var d = await res.json();
+            if (d.access_token) { localStorage.setItem('access_token', d.access_token); return true; }
         }
     } catch(e) { console.error('Refresh failed:', e); }
     return false;
@@ -412,26 +403,21 @@ function showSection(name) {
     if (name === 'profile') loadProfile();
 }
 
-async function apiGet(path, retry = true) {
+async function apiGet(path) {
     const res = await fetch(`${API_BASE}${path}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
-    if (res.status === 401 && retry) {
+    if (res.status === 401) {
         const refreshed = await refreshAccessToken();
-        if (refreshed) return apiGet(path, false);
+        if (refreshed) return apiGet(path);
         logout(); return null;
     }
     return res.json();
 }
 
-async function apiPut(path, data, retry = true) {
+async function apiPut(path, data) {
     const res = await fetch(`${API_BASE}${path}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
         body: JSON.stringify(data)
     });
-    if (res.status === 401 && retry) {
-        const refreshed = await refreshAccessToken();
-        if (refreshed) return apiPut(path, data, false);
-        logout(); return { ok: false, data: { detail: 'Session expired' } };
-    }
     return { ok: res.ok, data: await res.json() };
 }
 
@@ -480,9 +466,9 @@ async function loadProfile() {
 }
 async function saveProfile() {
     const data = {};
-    ['full_name','nick_name','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','current_address','permanent_address'].forEach(f => {
+    ['full_name','nick_name','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address'].forEach(f => {
         const el = document.getElementById(`p-${f}`);
-        if (el) data[f] = el.value || null;
+        if (el && el.value !== '') data[f] = el.value;
     });
     const hallEl = document.getElementById('p-hall');
     if (hallEl) data.hall = hallEl.value || null;
@@ -498,14 +484,11 @@ async function saveProfile() {
     alertEl.textContent = result.ok ? '✅ Profile updated successfully!' : (result.data.detail || 'Update failed');
     alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    if (result.ok) {
-        // Reload profile from server to confirm saved data
-        await loadProfile();
-        if (data.full_name) {
-            const u = JSON.parse(localStorage.getItem('user') || '{}');
-            u.full_name = data.full_name;
-            localStorage.setItem('user', JSON.stringify(u));
-        }
+    if (result.ok && data.full_name) {
+        document.getElementById('sidebar-name').textContent = data.full_name;
+        const u = JSON.parse(localStorage.getItem('user') || '{}');
+        u.full_name = data.full_name;
+        localStorage.setItem('user', JSON.stringify(u));
     }
 }
 
