@@ -295,11 +295,13 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
                 <input type="text" id="dir-search" placeholder="Search by name, profession, organization..." oninput="searchDirectory()">
                 <select id="dir-dept" onchange="searchDirectory()">
                     <option value="">All Departments</option>
-                    <option>Mathematics</option><option>Physics</option><option>Chemistry</option>
-                    <option>Computer Science & Engineering</option><option>Economics</option>
                     <option>Bangla</option><option>English</option><option>History</option>
-                    <option>Government & Politics</option><option>Pharmacy</option>
-                    <option>Biotechnology & Genetic Engineering</option>
+                    <option>Philosophy</option><option>Dramatics</option><option>Statistics</option>
+                    <option>Mathematics</option><option>Physics</option><option>Chemistry</option>
+                    <option>Economics</option><option>Geography</option>
+                    <option>Government &amp; Politics</option><option>Anthropology</option>
+                    <option>Geology</option><option>Zoology</option><option>Botany</option>
+                    <option>Pharmacy</option>
                 </select>
             </div>
             <div id="directory-grid" class="member-grid"><div class="loading">Loading members...</div></div>
@@ -562,39 +564,48 @@ async function saveProfile() {
 }
 
 async function loadDirectory() {
-    const search = document.getElementById('dir-search')?.value || '';
+    const search = (document.getElementById('dir-search')?.value || '').toLowerCase();
     const dept = document.getElementById('dir-dept')?.value || '';
-    let url = `/api/members/directory?per_page=50`;
-    if (search) url += `&search=${encodeURIComponent(search)}`;
-    if (dept) url += `&department=${encodeURIComponent(dept)}`;
-
-    const data = await apiGet(url);
     const grid = document.getElementById('directory-grid');
-    const members = Array.isArray(data) ? data : (data.members || []);
+    grid.innerHTML = '<div class="loading">Loading members...</div>';
+
+    const data = await apiGet('/api/members/directory');
     if (!data) { grid.innerHTML = '<div class="no-results">Failed to load members.</div>'; return; }
+
+    let members = Array.isArray(data) ? data : (data.members || []);
+
+    // Client-side filter
+    if (search) members = members.filter(m =>
+        (m.full_name||'').toLowerCase().includes(search) ||
+        (m.profession||'').toLowerCase().includes(search) ||
+        (m.organization||'').toLowerCase().includes(search) ||
+        (m.department||'').toLowerCase().includes(search)
+    );
+    if (dept) members = members.filter(m => m.department === dept);
+
     if (members.length === 0) { grid.innerHTML = '<div class="no-results">No members found.</div>'; return; }
 
-    // Store members globally for click handler
-    window._directoryMembers = {};
-    members.forEach((m, i) => { window._directoryMembers[i] = m; });
+    // Store globally
+    window._dirMembers = members;
 
     grid.innerHTML = members.map((m, i) => {
-        const photoUrl = m.profile_photo
-            ? (m.profile_photo.startsWith('http') ? m.profile_photo : '/uploads/' + m.profile_photo)
-            : null;
-        return `
-        <div class="member-card" onclick="showMemberDetail(window._directoryMembers[${i}])" style="cursor:pointer;">
-            <div class="member-avatar">${photoUrl ? `<img src="${photoUrl}" alt="" onerror="this.parentElement.innerHTML='👤'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : '👤'}</div>
-            <div class="member-name">${m.full_name || ''}</div>
-            <div class="member-dept">${m.department || ''} ${m.session ? `(${m.session})` : ''}</div>
-            <div class="member-prof">${m.designation ? m.designation + (m.organization ? ' at ' + m.organization : '') : (m.profession || '')}</div>
-            <div class="member-links">
-                ${m.linkedin ? `<a href="${m.linkedin}" target="_blank" class="member-link" onclick="event.stopPropagation()">LinkedIn</a>` : ''}
-                ${m.facebook ? `<a href="${m.facebook}" target="_blank" class="member-link" onclick="event.stopPropagation()">Facebook</a>` : ''}
-                ${m.show_phone && m.phone ? `<a href="tel:${m.phone}" class="member-link" onclick="event.stopPropagation()">📞 ${m.phone}</a>` : ''}
-            </div>
-        </div>`;
+        const photoUrl = m.profile_photo ? '/uploads/' + m.profile_photo : null;
+        const prof = m.designation ? (m.designation + (m.organization ? ' @ ' + m.organization : '')) : (m.profession || '');
+        return '<div class="member-card" data-idx="' + i + '" style="cursor:pointer;">' +
+            '<div class="member-avatar">' + (photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentNode.innerHTML='👤'">' : '👤') + '</div>' +
+            '<div class="member-name">' + (m.full_name || '') + '</div>' +
+            '<div class="member-dept">' + (m.department || '') + (m.session ? ' (' + m.session + ')' : '') + '</div>' +
+            '<div class="member-prof">' + prof + '</div>' +
+            '</div>';
     }).join('');
+
+    // Attach click events after rendering
+    grid.querySelectorAll('.member-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+            var idx = parseInt(this.getAttribute('data-idx'));
+            openMemberModal(window._dirMembers[idx]);
+        });
+    });
 }
 
 function searchDirectory() {
@@ -931,65 +942,55 @@ async function loadAnnouncementsBar() {
 
 
 <script>
-function showMemberDetail(m) {
-    const photoUrl = m.profile_photo
-        ? (m.profile_photo.startsWith('http') ? m.profile_photo : '/uploads/' + m.profile_photo)
-        : null;
-    
-    let html = `
-        <div style="text-align:center;margin-bottom:20px;">
-            <div style="width:90px;height:90px;border-radius:50%;background:#e8f0fe;margin:0 auto 12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:36px;">
-                ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='👤'">` : '👤'}
-            </div>
-            <h2 style="margin:0;color:#1a3a5c;font-size:20px;">${m.full_name || ''}</h2>
-            ${m.nick_name ? `<p style="color:#95a5a6;margin:4px 0;">"${m.nick_name}"</p>` : ''}
-            <span style="background:#e8f4fd;color:#1a3a5c;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">
-                ${m.department || ''} ${m.session ? `(${m.session})` : ''}
-            </span>
-        </div>`;
+function openMemberModal(m) {
+    var photoUrl = m.profile_photo ? '/uploads/' + m.profile_photo : null;
+    var html = '<div style="text-align:center;margin-bottom:20px;">';
+    html += '<div style="width:90px;height:90px;border-radius:50%;background:#e8f0fe;margin:0 auto 12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:36px;">';
+    html += photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='👤'">' : '👤';
+    html += '</div>';
+    html += '<h2 style="margin:0;color:#1a3a5c;font-size:20px;">' + (m.full_name || '') + '</h2>';
+    if (m.nick_name) html += '<p style="color:#95a5a6;margin:4px 0;">&ldquo;' + m.nick_name + '&rdquo;</p>';
+    html += '<span style="background:#e8f4fd;color:#1a3a5c;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">' + (m.department || '') + (m.session ? ' (' + m.session + ')' : '') + '</span>';
+    html += '</div>';
 
     if (m.profession || m.designation || m.organization) {
-        html += `<div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;">
-            <p style="margin:0;color:#2c3e50;font-weight:600;">💼 ${m.designation || m.profession || ''}</p>
-            ${m.organization ? `<p style="margin:4px 0 0;color:#7f8c8d;font-size:13px;">${m.organization}</p>` : ''}
-        </div>`;
+        html += '<div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;">';
+        html += '<p style="margin:0;color:#2c3e50;font-weight:600;">💼 ' + (m.designation || m.profession || '') + '</p>';
+        if (m.organization) html += '<p style="margin:4px 0 0;color:#7f8c8d;font-size:13px;">' + m.organization + '</p>';
+        html += '</div>';
     }
+    if (m.bio) html += '<p style="color:#555;font-size:14px;line-height:1.6;margin-bottom:12px;">' + m.bio + '</p>';
+    if (m.current_location) html += '<p style="color:#7f8c8d;font-size:13px;margin-bottom:12px;">📍 ' + m.current_location + '</p>';
 
-    if (m.bio) {
-        html += `<p style="color:#555;font-size:14px;line-height:1.6;margin-bottom:12px;">${m.bio}</p>`;
-    }
-
-    if (m.current_location) {
-        html += `<p style="color:#7f8c8d;font-size:13px;">📍 ${m.current_location}</p>`;
-    }
-
-    // Contact - respect privacy flags
-    const contacts = [];
-    if (m.show_phone && m.phone) contacts.push(`<a href="tel:${m.phone}" style="color:#1a3a5c;">📞 ${m.phone}</a>`);
-    if (m.show_email && m.email) contacts.push(`<a href="mailto:${m.email}" style="color:#1a3a5c;">✉️ ${m.email}</a>`);
-    if (m.whatsapp) contacts.push(`<a href="https://wa.me/${m.whatsapp.replace(/[^0-9]/g,'')}" target="_blank" style="color:#25d366;">💬 WhatsApp</a>`);
-    if (m.linkedin) contacts.push(`<a href="${m.linkedin}" target="_blank" style="color:#0077b5;">LinkedIn</a>`);
-    if (m.facebook) contacts.push(`<a href="${m.facebook}" target="_blank" style="color:#1877f2;">Facebook</a>`);
-
+    var contacts = [];
+    if (m.show_phone && m.phone) contacts.push('<a href="tel:' + m.phone + '" style="color:#1a3a5c;text-decoration:none;">📞 ' + m.phone + '</a>');
+    if (m.show_email && m.email) contacts.push('<a href="mailto:' + m.email + '" style="color:#1a3a5c;text-decoration:none;">✉️ ' + m.email + '</a>');
+    if (m.whatsapp) contacts.push('<a href="https://wa.me/' + m.whatsapp.replace(/[^0-9]/g,'') + '" target="_blank" style="color:#25d366;text-decoration:none;">💬 WhatsApp</a>');
+    if (m.linkedin) contacts.push('<a href="' + m.linkedin + '" target="_blank" style="color:#0077b5;text-decoration:none;">in LinkedIn</a>');
+    if (m.facebook) contacts.push('<a href="' + m.facebook + '" target="_blank" style="color:#1877f2;text-decoration:none;">f Facebook</a>');
     if (contacts.length > 0) {
-        html += `<div style="border-top:1px solid #eee;padding-top:12px;margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;font-size:14px;">
-            ${contacts.join('')}
-        </div>`;
+        html += '<div style="border-top:1px solid #eee;padding-top:12px;margin-top:12px;display:flex;flex-wrap:wrap;gap:12px;font-size:14px;">' + contacts.join('') + '</div>';
     }
 
     document.getElementById('member-modal-body').innerHTML = html;
-    const modal = document.getElementById('member-modal');
-    modal.style.cssText = 'display:flex;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);z-index:999999;align-items:center;justify-content:center;';
+
+    var overlay = document.getElementById('member-modal');
+    overlay.style.display = 'flex';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'rgba(0,0,0,0.65)';
+    overlay.style.zIndex = '999999';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
 }
 
 function closeMemberModal() {
-    document.getElementById('member-modal').style.display = 'none';
+    var overlay = document.getElementById('member-modal');
+    overlay.style.display = 'none';
 }
-
-// Close modal on backdrop click
-document.getElementById('member-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeMemberModal();
-});
 </script>
 </body>
 </html><div id="toast" class="toast"></div>
