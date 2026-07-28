@@ -110,16 +110,31 @@ def get_directory(db: Session = Depends(get_db), current_user: User = Depends(ge
     ).all()
     result = []
     for m in members:
-        result.append({
+        if not m.show_in_directory:
+            continue
+        entry = {
             "id": m.user_id,
             "full_name": m.full_name,
-            "department": getattr(m, "department", None),
-            "profession": getattr(m, "profession", None),
-            "current_location": getattr(m, "current_location", None),
-            "profile_photo": getattr(m, "profile_photo", None),
-            "batch_roll": getattr(m, "batch_roll", None),
-            "session": getattr(m, "session", None),
-        })
+            "nick_name": m.nick_name,
+            "department": m.department,
+            "session": m.session,
+            "batch_roll": m.batch_roll,
+            "profession": m.profession,
+            "designation": m.designation,
+            "organization": m.organization,
+            "current_location": m.current_location,
+            "profile_photo": m.profile_photo,
+            "linkedin": m.linkedin,
+            "facebook": m.facebook,
+            "bio": m.bio,
+            "whatsapp": m.whatsapp,
+            # Privacy-controlled fields
+            "show_phone": m.show_phone,
+            "show_email": m.show_email,
+            "phone": m.phone if m.show_phone else None,
+            "email": m.user.email if m.show_email else None,
+        }
+        result.append(entry)
     return result
 
 
