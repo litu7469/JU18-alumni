@@ -471,7 +471,10 @@ async function init() {
     document.getElementById('sidebar-dept').textContent = profile.department || '';
     document.getElementById('welcome-msg').textContent = `Welcome, ${name.split(' ')[0]}! 👋`;
     if (profile.profile_photo) {
-        document.getElementById('sidebar-avatar').innerHTML = `<img src="${profile.profile_photo}" alt="Photo">`;
+        const sPhoto = profile.profile_photo.startsWith('http') ? profile.profile_photo :
+                       profile.profile_photo.startsWith('/uploads/') ? profile.profile_photo :
+                       '/uploads/' + profile.profile_photo;
+        document.getElementById('sidebar-avatar').innerHTML = `<img src="${sPhoto}" alt="Photo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
     }
 
     // Stats - fetch member count independently
@@ -564,13 +567,17 @@ async function loadDirectory() {
     if (!data) { grid.innerHTML = '<div class="no-results">Failed to load members.</div>'; return; }
     if (members.length === 0) { grid.innerHTML = '<div class="no-results">No members found.</div>'; return; }
 
-    grid.innerHTML = members.map(m => {
+    // Store members globally for click handler
+    window._directoryMembers = {};
+    members.forEach((m, i) => { window._directoryMembers[i] = m; });
+
+    grid.innerHTML = members.map((m, i) => {
         const photoUrl = m.profile_photo
             ? (m.profile_photo.startsWith('http') ? m.profile_photo : '/uploads/' + m.profile_photo)
             : null;
         return `
-        <div class="member-card" onclick="showMemberDetail(${JSON.stringify(m).replace(/"/g, '&quot;')})" style="cursor:pointer;">
-            <div class="member-avatar">${photoUrl ? `<img src="${photoUrl}" alt="" onerror="this.parentElement.innerHTML='👤'">` : '👤'}</div>
+        <div class="member-card" onclick="showMemberDetail(window._directoryMembers[${i}])" style="cursor:pointer;">
+            <div class="member-avatar">${photoUrl ? `<img src="${photoUrl}" alt="" onerror="this.parentElement.innerHTML='👤'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : '👤'}</div>
             <div class="member-name">${m.full_name || ''}</div>
             <div class="member-dept">${m.department || ''} ${m.session ? `(${m.session})` : ''}</div>
             <div class="member-prof">${m.designation ? m.designation + (m.organization ? ' at ' + m.organization : '') : (m.profession || '')}</div>
