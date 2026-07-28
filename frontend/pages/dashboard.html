@@ -123,6 +123,13 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 </head>
 <body>
 
+<!-- Member Detail Modal - must be direct child of body -->
+<div id="member-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);z-index:999999;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;padding:32px;max-width:500px;width:90%;max-height:85vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <button onclick="closeMemberModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#95a5a6;line-height:1;">✕</button>
+        <div id="member-modal-body"></div>
+    </div>
+</div>
 <header class="header">
     <a href="https://ju18-alumni-production.up.railway.app/index.html" class="header-logo">
         <div class="logo-text">
@@ -921,13 +928,7 @@ async function loadAnnouncementsBar() {
 
 </script>
 
-<!-- Member Detail Modal -->
-<div id="member-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;align-items:center;justify-content:center;overflow:auto;">
-    <div style="background:white;border-radius:16px;padding:32px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;position:relative;z-index:100000;margin:auto;">
-        <button onclick="closeMemberModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#95a5a6;">✕</button>
-        <div id="member-modal-body"></div>
-    </div>
-</div>
+
 
 <script>
 function showMemberDetail(m) {
@@ -978,7 +979,7 @@ function showMemberDetail(m) {
 
     document.getElementById('member-modal-body').innerHTML = html;
     const modal = document.getElementById('member-modal');
-    modal.style.display = 'flex';
+    modal.style.cssText = 'display:flex;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);z-index:999999;align-items:center;justify-content:center;';
 }
 
 function closeMemberModal() {
