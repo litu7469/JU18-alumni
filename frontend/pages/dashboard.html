@@ -485,7 +485,7 @@ async function init() {
 async function loadProfile() {
     const p = await apiGet('/api/members/profile');
     if (!p) return;
-    ['full_name','nick_name','email','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address'].forEach(f => {
+    ['full_name','nick_name','email','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address','batch_roll','session','hall'].forEach(f => {
         const el = document.getElementById(`p-${f}`);
         if (el) {
             const val = p[f];
@@ -498,6 +498,10 @@ async function loadProfile() {
     if (document.getElementById('p-show_phone')) document.getElementById('p-show_phone').checked = p.show_phone || false;
     if (document.getElementById('p-show_email')) document.getElementById('p-show_email').checked = p.show_email || false;
     if (p.profile_photo) {
+        // Ensure correct URL for profile photo
+        const photoUrl = p.profile_photo.startsWith('http') ? p.profile_photo :
+                        p.profile_photo.startsWith('/uploads/') ? p.profile_photo :
+                        '/uploads/' + p.profile_photo;
         const preview = document.getElementById('profile-photo-preview');
         if (preview) preview.innerHTML = `<img src="${API_BASE}/uploads/${p.profile_photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
         const sidebarAvatar = document.getElementById('sidebar-avatar');
@@ -510,7 +514,7 @@ async function loadProfile() {
 }
 async function saveProfile() {
     const data = {};
-    ['full_name','nick_name','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address'].forEach(f => {
+    ['full_name','nick_name','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address','batch_roll','session','hall'].forEach(f => {
         const el = document.getElementById(`p-${f}`);
         if (el && el.value.trim() !== '') data[f] = el.value.trim();
     });
