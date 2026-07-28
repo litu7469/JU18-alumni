@@ -95,6 +95,30 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 
 .loading { text-align: center; padding: 40px; color: var(--muted); }
 .no-results { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
+
+/* Toast notification */
+.toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    max-width: 320px;
+}
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+.toast.success { background: #27ae60; }
+.toast.error   { background: #e74c3c; }
 </style>
 </head>
 <body>
@@ -393,6 +417,15 @@ if (user.registration_status !== 'approved' && user.role !== 'admin' && user.rol
     window.location.href = '/pages/pending.html';
 }
 
+function showToast(msg, type) {
+    type = type || 'success';
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type;
+    setTimeout(function() { t.classList.add('show'); }, 10);
+    setTimeout(function() { t.classList.remove('show'); }, 3500);
+}
+
 function logout() {
     localStorage.clear();
     window.location.href = 'https://ju18-alumni-production.up.railway.app/pages/login.html';
@@ -454,7 +487,10 @@ async function loadProfile() {
     if (!p) return;
     ['full_name','nick_name','email','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address'].forEach(f => {
         const el = document.getElementById(`p-${f}`);
-        if (el) el.value = p[f] || '';
+        if (el) {
+            const val = p[f];
+            el.value = (val !== null && val !== undefined) ? val : '';
+        }
     });
     const hallEl = document.getElementById('p-hall');
     if (hallEl) hallEl.value = p.hall || '';
@@ -487,10 +523,8 @@ async function saveProfile() {
     data.show_email = document.getElementById('p-show_email').checked;
 
     const result = await apiPut('/api/members/profile', data);
-    const alertEl = document.getElementById('profile-alert');
-    alertEl.className = `alert ${result.ok ? 'success' : 'error'}`;
-    alertEl.textContent = result.ok ? '✅ Profile updated successfully!' : (result.data.detail || 'Update failed');
-    alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const msg = result.ok ? '✅ Profile updated successfully!' : (result.data?.detail || 'Update failed');
+    showToast(msg, result.ok ? 'success' : 'error');
 
     if (result.ok) {
         await loadProfile();
@@ -862,4 +896,5 @@ async function loadAnnouncementsBar() {
 
 </script>
 </body>
-</html>
+</html><div id="toast" class="toast"></div>
+    
