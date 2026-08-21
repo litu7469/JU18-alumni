@@ -297,6 +297,7 @@ var API_BASE = 'https://ju18-alumni-production.up.railway.app';
 var currentRejectId = null;
 var editEventId = null;
 var allMembers = [];
+var currentUser = {};
 
 function logout() {
     localStorage.clear();
@@ -443,10 +444,13 @@ function renderMembers(members) {
         var resetBtn = m.registration_status === 'approved'
             ? '<button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="adminResetPassword(' + m.user_id + ', \'' + safeEmail + '\')">Reset Password</button>'
             : '<span style="color:#95a5a6;">-</span>';
+        var makeAdminBtn = (currentUser.role === 'super_admin' && m.registration_status === 'approved' && m.role === 'member')
+            ? ' <button class="btn btn-secondary" style="font-size:12px;padding:5px 10px;" onclick="makeAdmin(' + m.user_id + ')">Make Admin</button>'
+            : '';
         html += '<tr><td><strong>' + m.full_name + '</strong></td><td>' + (m.email||'-') + '</td><td>' + (m.department||'-') + '</td>' +
             '<td><span style="color:' + statusColor + ';font-weight:600;">' + (m.registration_status||'-') + '</span></td>' +
             '<td>' + (m.created_at ? m.created_at.substring(0,10) : '-') + '</td>' +
-            '<td>' + resetBtn + '</td></tr>';
+            '<td>' + resetBtn + makeAdminBtn + '</td></tr>';
     });
     html += '</tbody></table>';
     el.innerHTML = html;
@@ -515,18 +519,28 @@ async function loadAdmins() {
     if (!admins.length) { el.innerHTML = '<div class="empty">No admins found</div>'; return; }
     var html = '<table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody>';
     admins.forEach(function(m) {
+        var actionCell = m.role === 'super_admin'
+            ? '<span style="color:#95a5a6;">-</span>'
+            : '<button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="revokeAdmin(' + m.user_id + ')">Remove Admin</button>';
         html += '<tr><td>' + m.full_name + '</td><td>' + (m.email||'-') + '</td><td>' + m.role + '</td>' +
-            '<td><button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="changeRole(' + m.user_id + ', \'member\')">Remove Admin</button></td></tr>';
+            '<td>' + actionCell + '</td></tr>';
     });
     html += '</tbody></table>';
     el.innerHTML = html;
 }
 
-async function changeRole(userId, role) {
-    if (!confirm('Change role to ' + role + '?')) return;
-    var r = await api('/api/admin/change-role', { method: 'POST', body: JSON.stringify({ user_id: userId, role: role }) });
-    if (r.ok) loadAdmins();
-    else alert('Error: ' + (r.data.detail || 'Failed'));
+async function makeAdmin(userId) {
+    if (!confirm('Grant admin access to this member?')) return;
+    var r = await api('/api/admin/member/' + userId + '/make-admin', { method: 'POST' });
+    if (r.ok) { alert(r.data.message || 'User is now an admin.'); loadMembers(); loadAdmins(); }
+    else { alert('Error: ' + (r.data.detail || 'Failed')); }
+}
+
+async function revokeAdmin(userId) {
+    if (!confirm('Remove admin access from this user?')) return;
+    var r = await api('/api/admin/member/' + userId + '/revoke-admin', { method: 'POST' });
+    if (r.ok) { loadAdmins(); loadMembers(); }
+    else { alert('Error: ' + (r.data.detail || 'Failed')); }
 }
 
 // ===== EVENTS =====
@@ -724,6 +738,7 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = API_BASE + '/pages/login.html';
         return;
     }
+    currentUser = user;
     document.getElementById('admin-name').textContent = user.full_name || user.email || 'Admin';
     if (user.role === 'super_admin') {
         document.getElementById('admin-hidden').style.display = 'block';
