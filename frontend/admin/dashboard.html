@@ -446,13 +446,18 @@ function renderMembers(members) {
         var resetBtn = m.registration_status === 'approved'
             ? '<button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="adminResetPassword(' + m.user_id + ', \'' + safeEmail + '\')">Reset Password</button>'
             : '<span style="color:#95a5a6;">-</span>';
-        var makeAdminBtn = (currentUser.role === 'super_admin' && m.registration_status === 'approved' && m.role === 'member')
-            ? ' <button class="btn btn-secondary" style="font-size:12px;padding:5px 10px;" onclick="makeAdmin(' + m.user_id + ')">Make Admin</button>'
-            : '';
+        var roleBtn = '';
+        if (currentUser.role === 'super_admin' && m.registration_status === 'approved') {
+            if (m.role === 'member') {
+                roleBtn = ' <button class="btn btn-secondary" style="font-size:12px;padding:5px 10px;" onclick="makeAdmin(' + m.user_id + ')">Make Admin</button>';
+            } else if (m.role === 'admin') {
+                roleBtn = ' <button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="revokeAdmin(' + m.user_id + ')">Revoke Admin</button>';
+            }
+        }
         html += '<tr><td><strong>' + m.full_name + '</strong></td><td>' + (m.email||'-') + '</td><td>' + (m.department||'-') + '</td>' +
             '<td><span style="color:' + statusColor + ';font-weight:600;">' + (m.registration_status||'-') + '</span></td>' +
             '<td>' + (m.created_at ? m.created_at.substring(0,10) : '-') + '</td>' +
-            '<td>' + resetBtn + makeAdminBtn + '</td></tr>';
+            '<td>' + resetBtn + roleBtn + '</td></tr>';
     });
     html += '</tbody></table>';
     el.innerHTML = html;
