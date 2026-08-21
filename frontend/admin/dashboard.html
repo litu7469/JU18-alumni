@@ -436,15 +436,27 @@ async function loadMembers() {
 function renderMembers(members) {
     var el = document.getElementById('members-list');
     if (!members.length) { el.innerHTML = '<div class="empty">No members found</div>'; return; }
-    var html = '<table><thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Status</th><th>Joined</th></tr></thead><tbody>';
+    var html = '<table><thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>';
     members.forEach(function(m) {
         var statusColor = m.registration_status === 'approved' ? '#27ae60' : m.registration_status === 'pending' ? '#f39c12' : '#e74c3c';
+        var safeEmail = (m.email || '').replace(/'/g, "\\'");
+        var resetBtn = m.registration_status === 'approved'
+            ? '<button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="adminResetPassword(' + m.user_id + ', \'' + safeEmail + '\')">Reset Password</button>'
+            : '<span style="color:#95a5a6;">-</span>';
         html += '<tr><td><strong>' + m.full_name + '</strong></td><td>' + (m.email||'-') + '</td><td>' + (m.department||'-') + '</td>' +
             '<td><span style="color:' + statusColor + ';font-weight:600;">' + (m.registration_status||'-') + '</span></td>' +
-            '<td>' + (m.created_at ? m.created_at.substring(0,10) : '-') + '</td></tr>';
+            '<td>' + (m.created_at ? m.created_at.substring(0,10) : '-') + '</td>' +
+            '<td>' + resetBtn + '</td></tr>';
     });
     html += '</tbody></table>';
     el.innerHTML = html;
+}
+
+async function adminResetPassword(userId, email) {
+    if (!confirm('Send a password reset link to ' + email + '?')) return;
+    var r = await api('/api/admin/member/' + userId + '/reset-password', { method: 'POST' });
+    if (r.ok) { alert(r.data.message || 'Password reset link sent.'); }
+    else { alert('Error: ' + (r.data.detail || 'Failed to send reset link')); }
 }
 
 function filterMembers() {

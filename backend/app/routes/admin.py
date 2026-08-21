@@ -8,7 +8,7 @@ from app.core.auth_middleware import get_admin_user
 from app.core.security import generate_token
 from app.models.models import User, Member, UserRole, RegistrationStatus, Event, Memory, Message
 from app.schemas.schemas import AdminApproveRequest
-from app.services.email_service import send_set_password_email, send_rejection_email
+from app.services.email_service import send_set_password_email, send_rejection_email, send_password_reset_email
 import logging
 
 router = APIRouter()
@@ -167,6 +167,33 @@ def revoke_admin(
     db.commit()
     logger.info(f"Super admin {admin.id} revoked admin from user {user_id}")
     return {"message": f"{user.email} admin role revoked"}
+
+
+@router.post("/member/{user_id}/reset-password")
+def admin_reset_password(
+    user_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role == UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Cannot reset super admin password this way")
+    if user.registration_status != RegistrationStatus.APPROVED:
+        raise HTTPException(status_code=400, detail="Member must be approved before a password reset can be sent")
+
+    token = generate_token()
+    user.reset_password_token = token
+    user.reset_password_expires = datetime.now(timezone.utc) + timedelta(hours=24)
+    db.commit()
+
+    member = user.member
+    name = member.full_name if member else "Alumni"
+    background_tasks.add_task(send_password_reset_email, user.email, name, token)
+    logger.info(f"Admin {admin.id} sent password reset link to user {user.id} ({user.email})")
+    return {"message": f"Password reset link sent to {user.email}"}
 
 
 @router.post("/member/{user_id}/toggle-active")
