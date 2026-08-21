@@ -377,11 +377,13 @@ function showAlert(id, type, msg) {
 async function loadStats() {
     var r = await api('/api/admin/stats');
     if (r.ok) {
-        document.getElementById('stat-total').textContent = r.data.total_members || 0;
-        document.getElementById('stat-pending').textContent = r.data.pending_members || 0;
-        document.getElementById('stat-approved').textContent = r.data.approved_members || 0;
+        // Backend field names: total_members = approved count, total_registrations = all sign-ups,
+        // pending_approvals = awaiting admin review.
+        document.getElementById('stat-total').textContent = r.data.total_registrations || 0;
+        document.getElementById('stat-pending').textContent = r.data.pending_approvals || 0;
+        document.getElementById('stat-approved').textContent = r.data.total_members || 0;
         document.getElementById('stat-events').textContent = r.data.total_events || 0;
-        document.getElementById('pending-count').textContent = r.data.pending_members || 0;
+        document.getElementById('pending-count').textContent = r.data.pending_approvals || 0;
     }
 }
 
