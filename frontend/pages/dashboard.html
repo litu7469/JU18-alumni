@@ -592,7 +592,7 @@ async function loadDirectory() {
         const photoUrl = m.profile_photo ? '/uploads/' + m.profile_photo : null;
         const prof = m.designation ? (m.designation + (m.organization ? ' @ ' + m.organization : '')) : (m.profession || '');
         return '<div class="member-card" data-idx="' + i + '" style="cursor:pointer;">' +
-            '<div class="member-avatar">' + (photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentNode.innerHTML='👤'">' : '👤') + '</div>' +
+            '<div class="member-avatar">' + (photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentNode.innerHTML=\'👤\'">' : '👤') + '</div>' +
             '<div class="member-name">' + (m.full_name || '') + '</div>' +
             '<div class="member-dept">' + (m.department || '') + (m.session ? ' (' + m.session + ')' : '') + '</div>' +
             '<div class="member-prof">' + prof + '</div>' +
@@ -946,7 +946,7 @@ function openMemberModal(m) {
     var photoUrl = m.profile_photo ? '/uploads/' + m.profile_photo : null;
     var html = '<div style="text-align:center;margin-bottom:20px;">';
     html += '<div style="width:90px;height:90px;border-radius:50%;background:#e8f0fe;margin:0 auto 12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:36px;">';
-    html += photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='👤'">' : '👤';
+    html += photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'👤\'">' : '👤';
     html += '</div>';
     html += '<h2 style="margin:0;color:#1a3a5c;font-size:20px;">' + (m.full_name || '') + '</h2>';
     if (m.nick_name) html += '<p style="color:#95a5a6;margin:4px 0;">&ldquo;' + m.nick_name + '&rdquo;</p>';
