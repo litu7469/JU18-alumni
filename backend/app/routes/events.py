@@ -24,6 +24,7 @@ class EventCreate(BaseModel):
     is_rsvp_enabled: Optional[bool] = True
     is_published: Optional[bool] = True
     max_attendees: Optional[int] = 0
+    registration_fee: Optional[float] = None
 
 class EventUpdate(BaseModel):
     title: Optional[str] = None
@@ -35,6 +36,7 @@ class EventUpdate(BaseModel):
     is_rsvp_enabled: Optional[bool] = None
     max_attendees: Optional[int] = None
     is_published: Optional[bool] = None
+    registration_fee: Optional[float] = None
 
 
 # ── Helper ─────────────────────────────────────────────────────────────────
@@ -63,6 +65,7 @@ def format_event(e, db, current_user_id=None):
         "venue": e.location,
         "event_type": "general",
         "is_rsvp_enabled": e.registration_required,
+        "registration_fee": float(e.registration_fee) if e.registration_fee else 0,
         "max_attendees": e.max_attendees,
         "is_published": e.is_published,
         "image": e.image,
@@ -102,6 +105,7 @@ def create_event(
         location=data.venue,
         max_attendees=data.max_attendees if data.max_attendees else None,
         registration_required=data.is_rsvp_enabled,
+        registration_fee=data.registration_fee if data.registration_fee else None,
         is_published=data.is_published,
         created_by=current_user.id,
     )

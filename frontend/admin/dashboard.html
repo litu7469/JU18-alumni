@@ -182,6 +182,10 @@ input:focus, select:focus, textarea:focus { border-color: #1a3a5c; }
             </select>
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group"><label>Registration Fee (Tk)</label><input type="number" id="ev-fee" min="0" step="0.01" placeholder="0 = Free"></div>
+          <div class="form-group"></div>
+        </div>
         <div style="display:flex;gap:10px;">
           <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
           <button class="btn btn-secondary" onclick="cancelEventForm()">Cancel</button>
@@ -556,9 +560,11 @@ async function loadEvents() {
     var el = document.getElementById('events-list');
     var list = Array.isArray(r.data) ? r.data : [];
     if (!list.length) { el.innerHTML = '<div class="empty">No events yet</div>'; return; }
-    var html = '<table><thead><tr><th>Title</th><th>Date</th><th>Location</th><th>RSVPs</th><th>Actions</th></tr></thead><tbody>';
+    var html = '<table><thead><tr><th>Title</th><th>Date</th><th>Location</th><th>Fee</th><th>RSVPs</th><th>Actions</th></tr></thead><tbody>';
     list.forEach(function(e) {
-        html += '<tr><td><strong>' + e.title + '</strong></td><td>' + (e.event_date||'').substring(0,10) + '</td><td>' + (e.location||'-') + '</td>' +
+        var feeLabel = e.registration_fee ? ('Tk ' + e.registration_fee) : 'Free';
+        html += '<tr><td><strong>' + e.title + '</strong></td><td>' + (e.event_date||'').substring(0,10) + '</td><td>' + (e.venue||'-') + '</td>' +
+            '<td>' + feeLabel + '</td>' +
             '<td><span style="background:#1a3a5c;color:white;border-radius:10px;padding:2px 8px;font-size:12px;cursor:pointer;" onclick="viewAttendees(' + e.id + ', this)">\ud83d\udc65 ' + (e.rsvp_count||0) + '</span></td>' +
             '<td style="display:flex;gap:6px;">' +
             '<button class="btn btn-warning" style="font-size:12px;padding:5px 10px;" onclick="editEvent(' + e.id + ')">Edit</button>' +
@@ -572,7 +578,7 @@ async function loadEvents() {
 function cancelEventForm() {
     editEventId = null;
     document.getElementById('event-form-title').textContent = 'Create Event';
-    ['ev-title','ev-date','ev-time','ev-location','ev-desc','ev-max'].forEach(function(id) { document.getElementById(id).value = ''; });
+    ['ev-title','ev-date','ev-time','ev-location','ev-desc','ev-max','ev-fee'].forEach(function(id) { document.getElementById(id).value = ''; });
     document.getElementById('ev-type').value = 'general';
 }
 
@@ -585,10 +591,11 @@ async function editEvent(id) {
     document.getElementById('ev-title').value = e.title || '';
     document.getElementById('ev-date').value = (e.event_date||'').substring(0,10);
     document.getElementById('ev-time').value = e.event_time || '';
-    document.getElementById('ev-location').value = e.location || '';
+    document.getElementById('ev-location').value = e.venue || '';
     document.getElementById('ev-desc').value = e.description || '';
     document.getElementById('ev-max').value = e.max_attendees || '';
     document.getElementById('ev-type').value = e.event_type || 'general';
+    document.getElementById('ev-fee').value = e.registration_fee || '';
     window.scrollTo(0,0);
 }
 
@@ -602,6 +609,7 @@ async function saveEvent() {
         description: document.getElementById('ev-desc').value,
         max_attendees: parseInt(document.getElementById('ev-max').value) || 0,
         event_type: document.getElementById('ev-type').value,
+        registration_fee: parseFloat(document.getElementById('ev-fee').value) || 0,
         is_published: true
     };
     if (!payload.title || !payload.event_date) { showAlert('event-alert','error','Title and date are required'); return; }

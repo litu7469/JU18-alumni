@@ -639,6 +639,7 @@ async function loadEvents() {
                                 ${e.venue ? `<span style="font-size:12px;color:var(--muted);">📍 ${e.venue}</span>` : ''}
                                 ${e.event_time ? `<span style="font-size:12px;color:var(--muted);">🕐 ${e.event_time}</span>` : ''}
                                 <span style="font-size:11px;background:${typeColors[e.event_type]||'#f4f7fb'};padding:2px 8px;border-radius:10px;color:var(--navy);">${e.event_type || 'general'}</span>
+                                <span style="font-size:11px;background:${e.registration_fee ? '#fff8e8' : '#eafaf1'};color:${e.registration_fee ? '#f39c12' : '#27ae60'};padding:2px 8px;border-radius:10px;font-weight:600;">${e.registration_fee ? ('💰 Tk ' + e.registration_fee) : 'Free'}</span>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;">

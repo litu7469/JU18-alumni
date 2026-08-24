@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Enum, Date, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Enum, Date, UniqueConstraint, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -100,6 +100,7 @@ class Event(Base):
     image                 = Column(String, nullable=True)
     is_published          = Column(Boolean, default=True)
     registration_required = Column(Boolean, default=False)
+    registration_fee      = Column(Numeric(10, 2), nullable=True)
     max_attendees         = Column(Integer, nullable=True)
     created_by            = Column(Integer, ForeignKey("users.id"))
     created_at            = Column(DateTime, server_default=func.now())
