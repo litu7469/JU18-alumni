@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from app.core.database import get_db
 from app.core.auth_middleware import get_approved_member
+from app.core.cloud_storage import upload_image
 from app.models.models import User, Memory, Member
 from pydantic import BaseModel
 from typing import Optional
-import shutil, uuid
 
 router = APIRouter()
 
@@ -84,22 +84,21 @@ async def upload_profile_photo(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_approved_member)
 ):
-    import os
     if photo.size and photo.size > 2 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Image must be under 2MB")
     ext = photo.filename.rsplit('.', 1)[-1].lower()
     if ext not in ['jpg','jpeg','png','gif','webp']:
         raise HTTPException(status_code=400, detail="Invalid file type")
-    os.makedirs("uploads/profiles", exist_ok=True)
-    filename = f"profiles/{uuid.uuid4().hex}.{ext}"
-    with open(f"uploads/{filename}", "wb") as f:
-        shutil.copyfileobj(photo.file, f)
+    try:
+        url = upload_image(photo.file, "profiles")
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
     member = db.query(Member).filter(Member.user_id == current_user.id).first()
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
-    member.profile_photo = filename
+    member.profile_photo = url
     db.commit()
-    return {"profile_photo": filename}
+    return {"profile_photo": url}
 
 
 @router.get("/directory")
@@ -174,18 +173,17 @@ async def create_memory(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_approved_member)
 ):
-    import os
-    os.makedirs("uploads/memories", exist_ok=True)
     photo_paths = []
     for photo in photos[:3]:
         if photo and photo.filename:
             ext = photo.filename.rsplit('.', 1)[-1].lower()
             if ext not in ['jpg','jpeg','png','gif','webp']:
                 continue
-            filename = f"memories/{uuid.uuid4().hex}.{ext}"
-            with open(f"uploads/{filename}", "wb") as buffer:
-                shutil.copyfileobj(photo.file, buffer)
-            photo_paths.append(filename)
+            try:
+                url = upload_image(photo.file, "memories")
+            except RuntimeError:
+                continue
+            photo_paths.append(url)
 
     memory = Memory(
         submitted_by=current_user.id,

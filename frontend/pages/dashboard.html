@@ -525,9 +525,9 @@ async function loadProfile() {
                         p.profile_photo.startsWith('/uploads/') ? p.profile_photo :
                         '/uploads/' + p.profile_photo;
         const preview = document.getElementById('profile-photo-preview');
-        if (preview) preview.innerHTML = `<img src="${API_BASE}/uploads/${p.profile_photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        if (preview) preview.innerHTML = `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
         const sidebarAvatar = document.getElementById('sidebar-avatar');
-        if (sidebarAvatar) sidebarAvatar.innerHTML = `<img src="${API_BASE}/uploads/${p.profile_photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        if (sidebarAvatar) sidebarAvatar.innerHTML = `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
     }
     const nameEl = document.getElementById('sidebar-name');
     if (nameEl) nameEl.textContent = p.full_name || '';
@@ -589,7 +589,7 @@ async function loadDirectory() {
     window._dirMembers = members;
 
     grid.innerHTML = members.map((m, i) => {
-        const photoUrl = m.profile_photo ? '/uploads/' + m.profile_photo : null;
+        const photoUrl = m.profile_photo ? (m.profile_photo.startsWith('http') ? m.profile_photo : '/uploads/' + m.profile_photo) : null;
         const prof = m.designation ? (m.designation + (m.organization ? ' @ ' + m.organization : '')) : (m.profession || '');
         return '<div class="member-card" data-idx="' + i + '" style="cursor:pointer;">' +
             '<div class="member-avatar">' + (photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentNode.innerHTML=\'👤\'">' : '👤') + '</div>' +
@@ -750,7 +750,8 @@ async function loadMemories() {
             if (m.photos && m.photos.length > 0) {
                 photosHtml = '<div style="display:grid;grid-template-columns:repeat(' + Math.min(m.photos.length,3) + ',1fr);gap:8px;margin-top:12px;">' +
                     m.photos.map(function(p) {
-                        return '<img src="https://ju18-alumni-production.up.railway.app/uploads/' + p + '" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;cursor:pointer;background:#f4f7fb;" onclick="openPhoto(this.src)">';
+                        var src = p.startsWith('http') ? p : ('https://ju18-alumni-production.up.railway.app/uploads/' + p);
+                        return '<img src="' + src + '" style="width:100%;max-height:400px;object-fit:contain;border-radius:8px;cursor:pointer;background:#f4f7fb;" onclick="openPhoto(this.src)">';
                     }).join('') + '</div>';
             }
             var isOwner = parseInt(m.submitted_by) === parseInt(currentUserId);
@@ -853,42 +854,6 @@ async function deleteMemory(id) {
 async function uploadProfilePhoto(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
-    if (file.size > 2 * 1024 * 1024) {
-        document.getElementById('photo-upload-status').textContent = '❌ Image must be under 2MB';
-        document.getElementById('photo-upload-status').style.color = '#e74c3c';
-        return;
-    }
-    const status = document.getElementById('photo-upload-status');
-    status.textContent = 'Uploading...';
-    status.style.color = 'var(--muted)';
-
-    const formData = new FormData();
-    formData.append('photo', file);
-
-    const res = await fetch(`${API_BASE}/api/members/profile/photo`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${getToken()}` },
-        body: formData
-    });
-    const data = await res.json();
-    if (res.ok) {
-        const preview = document.getElementById('profile-photo-preview');
-        preview.innerHTML = `<img src="${API_BASE}/uploads/${data.profile_photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-        // Update sidebar avatar
-        const sidebarAvatar = document.getElementById('sidebar-avatar');
-        if (sidebarAvatar) sidebarAvatar.innerHTML = `<img src="${API_BASE}/uploads/${data.profile_photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-        status.textContent = '✅ Photo updated!';
-        status.style.color = '#27ae60';
-    } else {
-        status.textContent = '❌ Upload failed. Try again.';
-        status.style.color = '#e74c3c';
-    }
-}
-
-
-async function uploadProfilePhoto(input) {
-    if (!input.files || !input.files[0]) return;
-    const file = input.files[0];
     const status = document.getElementById('photo-upload-status');
     if (file.size > 2 * 1024 * 1024) {
         status.textContent = '❌ Image must be under 2MB';
@@ -906,7 +871,7 @@ async function uploadProfilePhoto(input) {
     });
     const data = await res.json();
     if (res.ok) {
-        const src = `${API_BASE}/uploads/${data.profile_photo}`;
+        const src = data.profile_photo.startsWith('http') ? data.profile_photo : `${API_BASE}/uploads/${data.profile_photo}`;
         const imgTag = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
         document.getElementById('profile-photo-preview').innerHTML = imgTag;
         const sa = document.getElementById('sidebar-avatar');
@@ -944,7 +909,7 @@ async function loadAnnouncementsBar() {
 
 <script>
 function openMemberModal(m) {
-    var photoUrl = m.profile_photo ? '/uploads/' + m.profile_photo : null;
+    var photoUrl = m.profile_photo ? (m.profile_photo.startsWith('http') ? m.profile_photo : '/uploads/' + m.profile_photo) : null;
     var html = '<div style="text-align:center;margin-bottom:20px;">';
     html += '<div style="width:90px;height:90px;border-radius:50%;background:#e8f0fe;margin:0 auto 12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:36px;">';
     html += photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'👤\'">' : '👤';
