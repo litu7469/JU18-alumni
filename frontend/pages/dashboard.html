@@ -950,9 +950,23 @@ function openMemberModal(m) {
     html += photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML=\'👤\'">' : '👤';
     html += '</div>';
     html += '<h2 style="margin:0;color:#1a3a5c;font-size:20px;">' + (m.full_name || '') + '</h2>';
+    if (m.bangla_name) html += '<p style="color:#7f8c8d;margin:2px 0;font-size:13px;">' + m.bangla_name + '</p>';
     if (m.nick_name) html += '<p style="color:#95a5a6;margin:4px 0;">&ldquo;' + m.nick_name + '&rdquo;</p>';
     html += '<span style="background:#e8f4fd;color:#1a3a5c;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">' + (m.department || '') + (m.session ? ' (' + m.session + ')' : '') + '</span>';
     html += '</div>';
+
+    var academicRows = [];
+    if (m.batch_roll) academicRows.push(['Batch/Roll', m.batch_roll]);
+    if (m.student_id) academicRows.push(['Student ID', m.student_id]);
+    if (m.hall) academicRows.push(['Hall', m.hall]);
+    if (m.date_of_birth) academicRows.push(['Date of Birth', m.date_of_birth]);
+    if (academicRows.length > 0) {
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;">';
+        academicRows.forEach(function(row) {
+            html += '<div><span style="color:#95a5a6;">' + row[0] + ':</span> <strong style="color:#2c3e50;">' + row[1] + '</strong></div>';
+        });
+        html += '</div>';
+    }
 
     if (m.profession || m.designation || m.organization) {
         html += '<div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;">';
