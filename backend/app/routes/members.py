@@ -13,11 +13,34 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+def get_or_create_member(current_user: User, db: Session) -> Member:
+    """
+    Look up the Member profile linked to this user. Admin/super_admin accounts
+    are sometimes created directly (e.g. an initial bootstrap account) without
+    ever going through registration, which normally creates the Member row.
+    Rather than 404 forever on the Profile page for such accounts, auto-create
+    a minimal Member row the first time one is needed.
+    """
+    member = db.query(Member).filter(Member.user_id == current_user.id).first()
+    if member:
+        return member
+    if current_user.role.value not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    logger.warning(f"No Member row for user {current_user.id} ({current_user.email}); auto-creating one.")
+    member = Member(
+        user_id=current_user.id,
+        full_name=current_user.email.split('@')[0],
+    )
+    db.add(member)
+    db.commit()
+    db.refresh(member)
+    return member
+
+
 @router.get("/profile")
 def get_profile(db: Session = Depends(get_db), current_user: User = Depends(get_approved_member)):
-    member = db.query(Member).filter(Member.user_id == current_user.id).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    member = get_or_create_member(current_user, db)
     return {
         "id": current_user.id,
         "email": current_user.email,
@@ -62,9 +85,7 @@ async def update_profile(request: Request, db: Session = Depends(get_db), curren
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Invalid JSON body")
 
-    member = db.query(Member).filter(Member.user_id == current_user.id).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    member = get_or_create_member(current_user, db)
 
     allowed = [
         "full_name", "nick_name", "phone", "whatsapp",
@@ -96,9 +117,7 @@ async def upload_profile_photo(
         url = upload_image(photo.file, "profiles")
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
-    member = db.query(Member).filter(Member.user_id == current_user.id).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="Member not found")
+    member = get_or_create_member(current_user, db)
     member.profile_photo = url
     db.commit()
     return {"profile_photo": url}

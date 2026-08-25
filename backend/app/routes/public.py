@@ -13,7 +13,7 @@ def get_homepage_data(db: Session = Depends(get_db)):
     # Slider images
     sliders = db.query(SliderImage).filter(
         SliderImage.is_active == True
-    ).order_by(SliderImage.order).all()
+    ).order_by(SliderImage.display_order).all()
 
     # Latest 3 events — upcoming first, then recent past ones if fewer than 3 upcoming
     upcoming_events = db.query(Event).filter(
@@ -45,7 +45,7 @@ def get_homepage_data(db: Session = Depends(get_db)):
     # Committee
     committee = db.query(CommitteeMember).filter(
         CommitteeMember.is_active == True
-    ).order_by(CommitteeMember.order).all()
+    ).order_by(CommitteeMember.display_order).all()
 
     # Stats
     total_members = db.query(User).filter(
