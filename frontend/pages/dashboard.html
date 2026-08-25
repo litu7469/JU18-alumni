@@ -813,8 +813,14 @@ async function submitMemory() {
     btn.disabled = false;
     btn.textContent = 'Share Memory';
     if (res.ok) {
+        const result = await res.json().catch(function() { return {}; });
         cancelMemoryForm();
         loadMemories();
+        if (result.photo_errors && result.photo_errors.length > 0) {
+            showToast('⚠️ Memory shared, but photo upload failed: ' + result.photo_errors.join('; '), 'error');
+        } else {
+            showToast('✅ Memory shared!', 'success');
+        }
     } else {
         alertEl.style.display = 'block';
         alertEl.style.background = '#fdecea';

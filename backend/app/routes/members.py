@@ -7,6 +7,9 @@ from app.core.cloud_storage import upload_image
 from app.models.models import User, Memory, Member
 from pydantic import BaseModel
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -174,14 +177,18 @@ async def create_memory(
     current_user: User = Depends(get_approved_member)
 ):
     photo_paths = []
+    upload_errors = []
     for photo in photos[:3]:
         if photo and photo.filename:
             ext = photo.filename.rsplit('.', 1)[-1].lower()
             if ext not in ['jpg','jpeg','png','gif','webp']:
+                upload_errors.append(f"{photo.filename}: unsupported file type")
                 continue
             try:
                 url = upload_image(photo.file, "memories")
-            except RuntimeError:
+            except RuntimeError as e:
+                logger.error(f"Memory photo upload failed for {photo.filename}: {e}")
+                upload_errors.append(f"{photo.filename}: {e}")
                 continue
             photo_paths.append(url)
 
@@ -198,7 +205,11 @@ async def create_memory(
     db.add(memory)
     db.commit()
     db.refresh(memory)
-    return {"message": "Memory shared!", "id": memory.id}
+    response = {"message": "Memory shared!", "id": memory.id}
+    if upload_errors:
+        response["message"] = "Memory shared, but some photos failed to upload."
+        response["photo_errors"] = upload_errors
+    return response
 
 @router.patch("/memories/{memory_id}/approve")
 def approve_memory(memory_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_approved_member)):
