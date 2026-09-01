@@ -6,7 +6,7 @@ from typing import Optional
 from app.core.database import get_db
 from app.core.auth_middleware import get_admin_user
 from app.core.security import generate_token
-from app.models.models import User, Member, UserRole, RegistrationStatus, Event, Memory, Message
+from app.models.models import User, Member, UserRole, RegistrationStatus, Event, Memory, Message, ContactMessage
 from app.schemas.schemas import AdminApproveRequest
 from app.services.email_service import send_set_password_email, send_rejection_email, send_password_reset_email
 import logging
@@ -241,3 +241,37 @@ def delete_member(
     db.commit()
     logger.info(f"Super admin {admin.id} soft-deleted user {user_id}")
     return {"message": "Member removed successfully"}
+
+
+@router.get("/contact-messages")
+def get_contact_messages(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    items = db.query(ContactMessage).order_by(ContactMessage.created_at.desc()).all()
+    return [{
+        "id": m.id,
+        "name": m.name,
+        "email": m.email,
+        "subject": m.subject,
+        "message": m.message,
+        "is_read": m.is_read,
+        "created_at": str(m.created_at),
+    } for m in items]
+
+
+@router.patch("/contact-messages/{message_id}/read")
+def mark_contact_message_read(message_id: int, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    msg = db.query(ContactMessage).filter(ContactMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    msg.is_read = True
+    db.commit()
+    return {"message": "Marked as read"}
+
+
+@router.delete("/contact-messages/{message_id}")
+def delete_contact_message(message_id: int, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    msg = db.query(ContactMessage).filter(ContactMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    db.delete(msg)
+    db.commit()
+    return {"message": "Message deleted"}

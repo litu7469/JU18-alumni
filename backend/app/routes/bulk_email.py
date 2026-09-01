@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional, List
 from app.core.database import get_db
 from app.core.auth_middleware import get_admin_user
-from app.models.models import User, Member, UserRole, RegistrationStatus
+from app.models.models import User, Member, UserRole, RegistrationStatus, EmailLog
 from app.services.email_service import send_email
 from pydantic import BaseModel
 import logging
@@ -19,16 +19,6 @@ class BulkEmailRequest(BaseModel):
     department: Optional[str] = None
     hall: Optional[str] = None
     custom_emails: Optional[List[str]] = None
-
-class EmailLog(BaseModel):
-    subject: str
-    recipient_count: int
-    recipient_type: str
-    sent_at: str
-    sent_by: str
-
-# In-memory log (replace with DB later)
-sent_logs = []
 
 @router.post("/send")
 def send_bulk_email(
@@ -80,15 +70,19 @@ def send_bulk_email(
             logger.error(f"Failed to send to {user.email}: {e}")
             failed += 1
 
-    # Log it
+    # Log it (persisted to DB so history survives container restarts)
     admin_member = db.query(Member).filter(Member.user_id == current_user.id).first()
-    sent_logs.append({
-        "subject": data.subject,
-        "recipient_type": data.recipient_type,
-        "recipient_count": sent,
-        "sent_at": datetime.utcnow().isoformat(),
-        "sent_by": admin_member.full_name if admin_member else current_user.email,
-    })
+    log_entry = EmailLog(
+        subject=data.subject,
+        recipient_type=data.recipient_type,
+        recipient_count=sent,
+        failed_count=failed,
+        sent_by=current_user.id,
+        sent_by_name=admin_member.full_name if admin_member else current_user.email,
+        sent_at=datetime.utcnow(),
+    )
+    db.add(log_entry)
+    db.commit()
 
     return {
         "message": f"Email sent to {sent} members",
@@ -98,8 +92,17 @@ def send_bulk_email(
     }
 
 @router.get("/logs")
-def get_email_logs(current_user: User = Depends(get_admin_user)):
-    return list(reversed(sent_logs))
+def get_email_logs(db: Session = Depends(get_db), current_user: User = Depends(get_admin_user)):
+    logs = db.query(EmailLog).order_by(EmailLog.sent_at.desc()).limit(100).all()
+    return [{
+        "id": l.id,
+        "subject": l.subject,
+        "recipient_type": l.recipient_type,
+        "recipient_count": l.recipient_count,
+        "failed_count": l.failed_count,
+        "sent_at": str(l.sent_at),
+        "sent_by": l.sent_by_name or "Admin",
+    } for l in logs]
 
 @router.get("/recipients/preview")
 def preview_recipients(

@@ -2,10 +2,35 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime
+from pydantic import BaseModel, EmailStr
 from app.core.database import get_db
-from app.models.models import Event, SliderImage, Announcement, CommitteeMember, SiteSetting, Member, User, RegistrationStatus
+from app.models.models import Event, SliderImage, Announcement, CommitteeMember, SiteSetting, Member, User, RegistrationStatus, ContactMessage
 
 router = APIRouter()
+
+
+class ContactMessageCreate(BaseModel):
+    name: str
+    email: EmailStr
+    subject: str
+    message: str
+
+
+@router.post("/contact")
+def submit_contact_message(data: ContactMessageCreate, db: Session = Depends(get_db)):
+    if not data.name.strip() or not data.subject.strip() or not data.message.strip():
+        raise HTTPException(status_code=422, detail="All fields are required")
+    msg = ContactMessage(
+        name=data.name.strip(),
+        email=data.email,
+        subject=data.subject.strip(),
+        message=data.message.strip(),
+        created_at=datetime.utcnow(),
+    )
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+    return {"message": "Message received", "id": msg.id}
 
 
 @router.get("/homepage")

@@ -212,3 +212,29 @@ class SiteSetting(Base):
     key        = Column(String, unique=True, nullable=False)
     value      = Column(Text, nullable=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class EmailLog(Base):
+    __tablename__ = "email_logs"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    subject         = Column(String, nullable=False)
+    recipient_type  = Column(String, nullable=False)
+    recipient_count = Column(Integer, default=0)
+    failed_count    = Column(Integer, default=0)
+    sent_by         = Column(Integer, ForeignKey("users.id"), nullable=True)
+    sent_by_name    = Column(String, nullable=True)
+    sent_at         = Column(DateTime, server_default=func.now())
+
+
+class ContactMessage(Base):
+    """Messages submitted through the public 'Contact Us' form on the homepage."""
+    __tablename__ = "contact_messages"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    name       = Column(String, nullable=False)
+    email      = Column(String, nullable=False)
+    subject    = Column(String, nullable=False)
+    message    = Column(Text, nullable=False)
+    is_read    = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())

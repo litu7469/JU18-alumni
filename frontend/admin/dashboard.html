@@ -104,6 +104,7 @@ input:focus, select:focus, textarea:focus { border-color: #1a3a5c; }
     <a class="menu-item" id="menu-events" onclick="showSection('events')">📅 Events</a>
     <a class="menu-item" id="menu-announcements" onclick="showSection('announcements')">📢 Announcements</a>
     <a class="menu-item" id="menu-bulkemail" onclick="showSection('bulkemail')">✉️ Bulk Email</a>
+    <a class="menu-item" id="menu-contact" onclick="showSection('contact')">📥 Contact Messages <span id="contact-unread-badge" style="display:none;background:#e74c3c;color:white;border-radius:10px;font-size:11px;padding:1px 7px;margin-left:4px;"></span></a>
     <a class="menu-item" id="menu-reports" onclick="showSection('reports')">📊 Reports</a>
   </aside>
 
@@ -254,6 +255,19 @@ input:focus, select:focus, textarea:focus { border-color: #1a3a5c; }
         <div class="form-group"><label>Message</label><textarea id="email-body" rows="6"></textarea></div>
         <button class="btn btn-primary" onclick="sendBulkEmail()">Send Email</button>
       </div>
+      <div class="card">
+        <div class="card-header"><h3>Sent Email History</h3></div>
+        <div id="email-logs-list"><div class="empty">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- CONTACT MESSAGES -->
+    <div class="section" id="section-contact">
+      <div class="section-title">Contact Messages</div>
+      <div class="card">
+        <div class="card-header"><h3>Messages from the public Contact Us form</h3></div>
+        <div id="contact-messages-list"><div class="empty">Loading...</div></div>
+      </div>
     </div>
 
     <!-- REPORTS -->
@@ -321,6 +335,8 @@ function showSection(name) {
     if (name === 'admins') loadAdmins();
     if (name === 'events') loadEvents();
     if (name === 'announcements') loadAnnouncements();
+    if (name === 'bulkemail') loadEmailLogs();
+    if (name === 'contact') loadContactMessages();
     if (name === 'reports') loadReports();
 }
 
@@ -694,8 +710,79 @@ async function sendBulkEmail() {
     if (!payload.subject || !payload.body) { showAlert('email-alert','error','Subject and message required'); return; }
     showAlert('email-alert','info','Sending...');
     var r = await api('/api/email/send', { method: 'POST', body: JSON.stringify(payload) });
-    if (r.ok) { showAlert('email-alert','success','Emails sent successfully!'); }
+    if (r.ok) {
+        showAlert('email-alert','success', 'Sent to ' + r.data.sent + ' member(s)' + (r.data.failed ? (', ' + r.data.failed + ' failed') : '') + '.');
+        document.getElementById('email-subject').value = '';
+        document.getElementById('email-body').value = '';
+        document.getElementById('email-custom').value = '';
+        loadEmailLogs();
+    }
     else { showAlert('email-alert','error', r.data.detail || 'Failed to send'); }
+}
+
+async function loadEmailLogs() {
+    var el = document.getElementById('email-logs-list');
+    var r = await api('/api/email/logs');
+    if (!r.ok) { el.innerHTML = '<div class="empty">Could not load email history.</div>'; return; }
+    var list = Array.isArray(r.data) ? r.data : [];
+    if (!list.length) { el.innerHTML = '<div class="empty">No emails sent yet</div>'; return; }
+    var html = '<table><thead><tr><th>Subject</th><th>Recipients</th><th>Sent</th><th>Failed</th><th>By</th><th>Date</th></tr></thead><tbody>';
+    list.forEach(function(l) {
+        html += '<tr><td><strong>' + l.subject + '</strong></td>' +
+            '<td>' + l.recipient_type + '</td>' +
+            '<td>' + l.recipient_count + '</td>' +
+            '<td>' + (l.failed_count ? ('<span style="color:#e74c3c;">' + l.failed_count + '</span>') : '0') + '</td>' +
+            '<td>' + (l.sent_by || 'Admin') + '</td>' +
+            '<td>' + (l.sent_at || '').substring(0,16).replace('T',' ') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+// ===== CONTACT MESSAGES =====
+async function loadContactMessages() {
+    var el = document.getElementById('contact-messages-list');
+    var r = await api('/api/admin/contact-messages');
+    if (!r.ok) { el.innerHTML = '<div class="empty">Could not load messages.</div>'; return; }
+    var list = Array.isArray(r.data) ? r.data : [];
+    if (!list.length) { el.innerHTML = '<div class="empty">No messages yet</div>'; return; }
+    var html = '<table><thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th><th>Action</th></tr></thead><tbody>';
+    list.forEach(function(m) {
+        var rowStyle = m.is_read ? '' : ' style="background:#fff8e8;"';
+        html += '<tr' + rowStyle + '>' +
+            '<td>' + (m.is_read ? '' : '🔵 ') + '<strong>' + m.name + '</strong><br><small style="color:#95a5a6;">' + m.email + '</small></td>' +
+            '<td>' + m.subject + '</td>' +
+            '<td style="max-width:320px;">' + m.message + '</td>' +
+            '<td>' + (m.created_at || '').substring(0,16).replace('T',' ') + '</td>' +
+            '<td>' +
+                (m.is_read ? '' : '<button class="btn btn-primary" style="font-size:12px;padding:5px 10px;margin-right:6px;" onclick="markMessageRead(' + m.id + ')">Mark Read</button>') +
+                '<a href="mailto:' + m.email + '?subject=' + encodeURIComponent('Re: ' + m.subject) + '" class="btn" style="font-size:12px;padding:5px 10px;margin-right:6px;background:#eef3f8;color:#1a3a5c;text-decoration:none;">Reply</a>' +
+                '<button class="btn btn-danger" style="font-size:12px;padding:5px 10px;" onclick="deleteContactMessage(' + m.id + ')">Delete</button>' +
+            '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+async function markMessageRead(id) {
+    var r = await api('/api/admin/contact-messages/' + id + '/read', { method: 'PATCH' });
+    if (r.ok) { loadContactMessages(); refreshContactUnreadBadge(); }
+}
+
+async function deleteContactMessage(id) {
+    if (!confirm('Delete this message?')) return;
+    var r = await api('/api/admin/contact-messages/' + id, { method: 'DELETE' });
+    if (r.ok) { loadContactMessages(); refreshContactUnreadBadge(); }
+}
+
+async function refreshContactUnreadBadge() {
+    var r = await api('/api/admin/contact-messages');
+    var badge = document.getElementById('contact-unread-badge');
+    if (!r.ok || !badge) return;
+    var list = Array.isArray(r.data) ? r.data : [];
+    var unread = list.filter(function(m) { return !m.is_read; }).length;
+    if (unread > 0) { badge.style.display = 'inline'; badge.textContent = unread; }
+    else { badge.style.display = 'none'; }
 }
 
 // ===== REPORTS =====
@@ -759,6 +846,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('admin-hidden').style.display = 'block';
     }
     loadStats();
+    refreshContactUnreadBadge();
 });
 </script>
 

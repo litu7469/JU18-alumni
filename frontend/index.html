@@ -334,6 +334,67 @@
             color: #666;
         }
 
+        /* Contact Form */
+        .contact-form {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            max-width: 600px;
+        }
+
+        .contact-form .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .contact-form label {
+            display: block;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border: 1.5px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            border-color: #2a5298;
+        }
+
+        .contact-form button {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .contact-form button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #contact-alert {
+            display: none;
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
         /* President's Message */
         .messages {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -557,6 +618,31 @@
             </div>
         </section>
 
+        <!-- Contact Us Section -->
+        <section class="section" id="contact-section">
+            <h2>Contact Us</h2>
+            <div class="contact-form">
+                <div id="contact-alert"></div>
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="contact-name" placeholder="Your full name">
+                </div>
+                <div class="form-group">
+                    <label>Your Email</label>
+                    <input type="email" id="contact-email" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" id="contact-subject" placeholder="What is this about?">
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="contact-message" rows="5" placeholder="Write your message here..."></textarea>
+                </div>
+                <button id="contact-submit-btn" onclick="sendContactForm()">Send Message</button>
+            </div>
+        </section>
+
         <!-- President's Message Section -->
         <section class="section">
             <div class="messages">
@@ -727,7 +813,7 @@ function requireLogin(e) {
     }
 }
 
-function sendContactForm() {
+async function sendContactForm() {
     var name = document.getElementById("contact-name").value.trim();
     var email = document.getElementById("contact-email").value.trim();
     var subject = document.getElementById("contact-subject").value.trim();
@@ -740,14 +826,37 @@ function sendContactForm() {
         alertEl.textContent = "Please fill in all fields.";
         return;
     }
-    alertEl.style.display = "block";
-    alertEl.style.background = "#eafaf1";
-    alertEl.style.color = "#27ae60";
-    alertEl.textContent = "✅ Thank you! Your message has been received.";
-    document.getElementById("contact-name").value = "";
-    document.getElementById("contact-email").value = "";
-    document.getElementById("contact-subject").value = "";
-    document.getElementById("contact-message").value = "";
+    var btn = document.getElementById("contact-submit-btn");
+    if (btn) { btn.disabled = true; btn.textContent = "Sending..."; }
+    try {
+        var res = await fetch("/api/public/contact", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: name, email: email, subject: subject, message: message })
+        });
+        if (res.ok) {
+            alertEl.style.display = "block";
+            alertEl.style.background = "#eafaf1";
+            alertEl.style.color = "#27ae60";
+            alertEl.textContent = "✅ Thank you! Your message has been received.";
+            document.getElementById("contact-name").value = "";
+            document.getElementById("contact-email").value = "";
+            document.getElementById("contact-subject").value = "";
+            document.getElementById("contact-message").value = "";
+        } else {
+            var data = await res.json().catch(function() { return {}; });
+            alertEl.style.display = "block";
+            alertEl.style.background = "#fdecea";
+            alertEl.style.color = "#e74c3c";
+            alertEl.textContent = data.detail || "Something went wrong. Please try again.";
+        }
+    } catch (e) {
+        alertEl.style.display = "block";
+        alertEl.style.background = "#fdecea";
+        alertEl.style.color = "#e74c3c";
+        alertEl.textContent = "Network error. Please try again.";
+    }
+    if (btn) { btn.disabled = false; btn.textContent = "Send Message"; }
 }
 </script>
 </body>
