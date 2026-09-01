@@ -310,6 +310,20 @@ input:focus, select:focus, textarea:focus { border-color: #1a3a5c; }
   </div>
 </div>
 
+<!-- Reply to Contact Message Modal -->
+<div class="modal-backdrop" id="reply-modal">
+  <div class="modal">
+    <h3 id="reply-modal-title">Reply</h3>
+    <div style="background:#f4f7fb;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#555;max-height:120px;overflow-y:auto;" id="reply-modal-original"></div>
+    <div id="reply-modal-alert" class="alert"></div>
+    <div class="form-group"><label>Your Reply</label><textarea id="reply-text" rows="6" placeholder="Type your reply..."></textarea></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" id="reply-send-btn" onclick="sendContactReply()">Send Reply</button>
+      <button class="btn btn-secondary" onclick="closeReplyModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var API_BASE = 'https://ju18-alumni-production.up.railway.app';
 var currentRejectId = null;
@@ -740,13 +754,16 @@ async function loadEmailLogs() {
 }
 
 // ===== CONTACT MESSAGES =====
+var contactMessagesCache = [];
+
 async function loadContactMessages() {
     var el = document.getElementById('contact-messages-list');
     var r = await api('/api/admin/contact-messages');
     if (!r.ok) { el.innerHTML = '<div class="empty">Could not load messages.</div>'; return; }
     var list = Array.isArray(r.data) ? r.data : [];
+    contactMessagesCache = list;
     if (!list.length) { el.innerHTML = '<div class="empty">No messages yet</div>'; return; }
-    var html = '<table><thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th><th>Action</th></tr></thead><tbody>';
+    var html = '<table><thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Received</th><th>Status</th><th>Action</th></tr></thead><tbody>';
     list.forEach(function(m) {
         var rowStyle = m.is_read ? '' : ' style="background:#fff8e8;"';
         html += '<tr' + rowStyle + '>' +
@@ -754,9 +771,10 @@ async function loadContactMessages() {
             '<td>' + m.subject + '</td>' +
             '<td style="max-width:320px;">' + m.message + '</td>' +
             '<td>' + (m.created_at || '').substring(0,16).replace('T',' ') + '</td>' +
+            '<td>' + (m.replied ? '<span style="color:#27ae60;">✓ Replied</span>' : '<span style="color:#95a5a6;">-</span>') + '</td>' +
             '<td>' +
                 (m.is_read ? '' : '<button class="btn btn-primary" style="font-size:12px;padding:5px 10px;margin-right:6px;" onclick="markMessageRead(' + m.id + ')">Mark Read</button>') +
-                '<a href="mailto:' + m.email + '?subject=' + encodeURIComponent('Re: ' + m.subject) + '" class="btn" style="font-size:12px;padding:5px 10px;margin-right:6px;background:#eef3f8;color:#1a3a5c;text-decoration:none;">Reply</a>' +
+                '<button class="btn" style="font-size:12px;padding:5px 10px;margin-right:6px;background:#eef3f8;color:#1a3a5c;" onclick="openReplyModal(' + m.id + ')">' + (m.replied ? 'Reply Again' : 'Reply') + '</button>' +
                 '<button class="btn btn-danger" style="font-size:12px;padding:5px 10px;" onclick="deleteContactMessage(' + m.id + ')">Delete</button>' +
             '</td></tr>';
     });
@@ -774,6 +792,52 @@ async function deleteContactMessage(id) {
     var r = await api('/api/admin/contact-messages/' + id, { method: 'DELETE' });
     if (r.ok) { loadContactMessages(); refreshContactUnreadBadge(); }
 }
+
+var replyModalMessageId = null;
+
+function openReplyModal(id) {
+    var msg = contactMessagesCache.find(function(m) { return m.id === id; });
+    if (!msg) return;
+    replyModalMessageId = id;
+    document.getElementById('reply-modal-title').textContent = 'Reply to ' + msg.name;
+    document.getElementById('reply-modal-original').innerHTML =
+        '<strong>' + msg.subject + '</strong><br>' + msg.message +
+        (msg.replied ? '<hr style="margin:8px 0;border:none;border-top:1px solid #ddd;"><strong>Your previous reply:</strong><br>' + (msg.reply_text || '') : '');
+    document.getElementById('reply-text').value = '';
+    document.getElementById('reply-modal-alert').style.display = 'none';
+    document.getElementById('reply-modal').classList.add('show');
+}
+
+function closeReplyModal() {
+    document.getElementById('reply-modal').classList.remove('show');
+    replyModalMessageId = null;
+}
+
+async function sendContactReply() {
+    var text = document.getElementById('reply-text').value.trim();
+    if (!text) { showAlert('reply-modal-alert', 'error', 'Please write a reply.'); return; }
+    var btn = document.getElementById('reply-send-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    var r = await api('/api/admin/contact-messages/' + replyModalMessageId + '/reply', {
+        method: 'POST',
+        body: JSON.stringify({ reply: text })
+    });
+    btn.disabled = false;
+    btn.textContent = 'Send Reply';
+    if (r.ok) {
+        closeReplyModal();
+        loadContactMessages();
+        refreshContactUnreadBadge();
+    } else {
+        showAlert('reply-modal-alert', 'error', r.data.detail || 'Failed to send reply');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var backdrop = document.getElementById('reply-modal');
+    if (backdrop) backdrop.addEventListener('click', function(e) { if (e.target === this) closeReplyModal(); });
+});
 
 async function refreshContactUnreadBadge() {
     var r = await api('/api/admin/contact-messages');

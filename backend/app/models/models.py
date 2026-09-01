@@ -231,10 +231,14 @@ class ContactMessage(Base):
     """Messages submitted through the public 'Contact Us' form on the homepage."""
     __tablename__ = "contact_messages"
 
-    id         = Column(Integer, primary_key=True, index=True)
-    name       = Column(String, nullable=False)
-    email      = Column(String, nullable=False)
-    subject    = Column(String, nullable=False)
-    message    = Column(Text, nullable=False)
-    is_read    = Column(Boolean, default=False)
-    created_at = Column(DateTime, server_default=func.now())
+    id          = Column(Integer, primary_key=True, index=True)
+    name        = Column(String, nullable=False)
+    email       = Column(String, nullable=False)
+    subject     = Column(String, nullable=False)
+    message     = Column(Text, nullable=False)
+    is_read     = Column(Boolean, default=False)
+    replied     = Column(Boolean, default=False)
+    reply_text  = Column(Text, nullable=True)
+    replied_at  = Column(DateTime, nullable=True)
+    replied_by  = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at  = Column(DateTime, server_default=func.now())

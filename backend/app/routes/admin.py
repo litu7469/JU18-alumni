@@ -8,7 +8,7 @@ from app.core.auth_middleware import get_admin_user
 from app.core.security import generate_token
 from app.models.models import User, Member, UserRole, RegistrationStatus, Event, Memory, Message, ContactMessage
 from app.schemas.schemas import AdminApproveRequest
-from app.services.email_service import send_set_password_email, send_rejection_email, send_password_reset_email
+from app.services.email_service import send_set_password_email, send_rejection_email, send_password_reset_email, send_email
 import logging
 
 router = APIRouter()
@@ -243,6 +243,10 @@ def delete_member(
     return {"message": "Member removed successfully"}
 
 
+class ContactReplyRequest(BaseModel):
+    reply: str
+
+
 @router.get("/contact-messages")
 def get_contact_messages(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
     items = db.query(ContactMessage).order_by(ContactMessage.created_at.desc()).all()
@@ -253,6 +257,9 @@ def get_contact_messages(db: Session = Depends(get_db), admin: User = Depends(ge
         "subject": m.subject,
         "message": m.message,
         "is_read": m.is_read,
+        "replied": m.replied,
+        "reply_text": m.reply_text,
+        "replied_at": str(m.replied_at) if m.replied_at else None,
         "created_at": str(m.created_at),
     } for m in items]
 
@@ -265,6 +272,49 @@ def mark_contact_message_read(message_id: int, db: Session = Depends(get_db), ad
     msg.is_read = True
     db.commit()
     return {"message": "Marked as read"}
+
+
+@router.post("/contact-messages/{message_id}/reply")
+def reply_to_contact_message(
+    message_id: int,
+    data: ContactReplyRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    msg = db.query(ContactMessage).filter(ContactMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    if not data.reply.strip():
+        raise HTTPException(status_code=422, detail="Reply message cannot be empty")
+
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #1a3a5c; padding: 24px; text-align: center;">
+            <h1 style="color: #c9a84c; margin: 0; font-size: 22px;">JU 18th Batch Alumni</h1>
+        </div>
+        <div style="padding: 32px; background: #ffffff;">
+            <p style="color: #444; line-height: 1.6;">Dear {msg.name},</p>
+            <p style="color: #444; line-height: 1.6;">{data.reply.replace(chr(10), "<br>")}</p>
+            <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
+            <p style="color: #999; font-size: 12px;">Your original message:</p>
+            <p style="color: #777; font-size: 13px; font-style: italic; border-left: 3px solid #ddd; padding-left: 12px;">{msg.message}</p>
+        </div>
+        <div style="background: #f4f7fb; padding: 16px; text-align: center; font-size: 12px; color: #666;">
+            JU 18th Batch Alumni Association
+        </div>
+    </div>
+    """
+    sent = send_email(msg.email, f"Re: {msg.subject}", html)
+    if not sent:
+        raise HTTPException(status_code=500, detail="Failed to send reply email. Check email service configuration.")
+
+    msg.replied = True
+    msg.reply_text = data.reply.strip()
+    msg.replied_at = datetime.utcnow()
+    msg.replied_by = admin.id
+    msg.is_read = True
+    db.commit()
+    return {"message": f"Reply sent to {msg.email}"}
 
 
 @router.delete("/contact-messages/{message_id}")
