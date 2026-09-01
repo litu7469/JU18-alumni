@@ -11,22 +11,44 @@ router = APIRouter()
 
 class AnnouncementCreate(BaseModel):
     title: str
-    body: str
+    content: Optional[str] = None
+    body: Optional[str] = None  # accepted as an alias for 'content' for backwards compatibility
     priority: Optional[str] = "normal"
+    is_pinned: Optional[bool] = None
+    is_published: Optional[bool] = True
+    expires_at: Optional[str] = None
     send_email: Optional[bool] = False
+
+    def resolved_content(self) -> str:
+        return self.content if self.content is not None else (self.body or "")
+
+    def resolved_is_pinned(self) -> bool:
+        return self.is_pinned if self.is_pinned is not None else (self.priority == "urgent")
+
+
+def _serialize_announcement(a: Announcement) -> dict:
+    return {
+        "id": a.id,
+        "title": a.title,
+        # Both naming conventions are returned since different pages consume
+        # different field names (member dashboard uses body/priority, admin
+        # dashboard uses content/is_pinned/expires_at).
+        "body": a.content,
+        "content": a.content,
+        "priority": "urgent" if a.is_pinned else "normal",
+        "is_pinned": a.is_pinned,
+        "is_active": a.is_published,
+        "is_published": a.is_published,
+        "expires_at": str(a.expires_at) if a.expires_at else None,
+        "created_at": str(a.created_at),
+        "created_by": "Admin",
+    }
+
 
 @router.get("")
 def get_announcements(db: Session = Depends(get_db), current_user: User = Depends(get_approved_member)):
     items = db.query(Announcement).filter(Announcement.is_published == True).order_by(Announcement.created_at.desc()).limit(10).all()
-    return [{
-        "id": a.id,
-        "title": a.title,
-        "body": a.content,
-        "priority": "normal",
-        "is_active": a.is_published,
-        "created_at": str(a.created_at),
-        "created_by": "Admin",
-    } for a in items]
+    return [_serialize_announcement(a) for a in items]
 
 @router.post("")
 def create_announcement(
@@ -34,11 +56,23 @@ def create_announcement(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_admin_user)
 ):
+    content = data.resolved_content()
+    if not data.title or not content:
+        raise HTTPException(status_code=422, detail="Title and content are required")
+
+    expires = None
+    if data.expires_at:
+        try:
+            expires = datetime.fromisoformat(data.expires_at)
+        except ValueError:
+            expires = None
+
     ann = Announcement(
         title=data.title,
-        content=data.body,
-        is_published=True,
-        is_pinned=data.priority == "urgent",
+        content=content,
+        is_published=data.is_published if data.is_published is not None else True,
+        is_pinned=data.resolved_is_pinned(),
+        expires_at=expires,
         created_by=current_user.id,
         created_at=datetime.utcnow(),
     )
@@ -59,7 +93,7 @@ def create_announcement(
             </div>
             <div style="padding:32px;background:#fff;">
                 <h2 style="color:#1a3a5c;">{data.title}</h2>
-                <p style="color:#444;line-height:1.6;">{data.body.replace(chr(10), '<br>')}</p>
+                <p style="color:#444;line-height:1.6;">{content.replace(chr(10), '<br>')}</p>
             </div>
             <div style="background:#f4f7fb;padding:16px;text-align:center;font-size:12px;color:#666;">
                 JU 18th Batch Alumni Association
@@ -83,12 +117,4 @@ def delete_announcement(announcement_id: int, db: Session = Depends(get_db), cur
 @router.get("/admin/all")
 def admin_get_announcements(db: Session = Depends(get_db), current_user: User = Depends(get_admin_user)):
     items = db.query(Announcement).order_by(Announcement.created_at.desc()).all()
-    return [{
-        "id": a.id,
-        "title": a.title,
-        "body": a.content,
-        "priority": "urgent" if a.is_pinned else "normal",
-        "is_active": a.is_published,
-        "created_at": str(a.created_at),
-        "created_by": "Admin",
-    } for a in items]
+    return [_serialize_announcement(a) for a in items]
