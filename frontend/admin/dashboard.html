@@ -36,6 +36,8 @@ hr.divider { border: none; border-top: 1px solid #eee; margin: 8px 0; }
 .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; }
 .stat-card .num { font-size: 32px; font-weight: 800; color: #1a3a5c; }
 .stat-card .lbl { font-size: 12px; color: #7f8c8d; margin-top: 4px; }
+.stat-card-clickable { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.stat-card-clickable:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
 /* Table */
 .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 20px; }
 .card-header { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
@@ -114,10 +116,10 @@ input:focus, select:focus, textarea:focus { border-color: #1a3a5c; }
     <div class="section active" id="section-overview">
       <div class="section-title">Overview</div>
       <div class="stats-grid">
-        <div class="stat-card"><div class="num" id="stat-total">-</div><div class="lbl">Total Members</div></div>
-        <div class="stat-card"><div class="num" id="stat-pending">-</div><div class="lbl">Pending</div></div>
-        <div class="stat-card"><div class="num" id="stat-approved">-</div><div class="lbl">Approved</div></div>
-        <div class="stat-card"><div class="num" id="stat-events">-</div><div class="lbl">Events</div></div>
+        <div class="stat-card stat-card-clickable" onclick="goToMembersFiltered(null)"><div class="num" id="stat-total">-</div><div class="lbl">Total Members</div></div>
+        <div class="stat-card stat-card-clickable" onclick="showSection('pending')"><div class="num" id="stat-pending">-</div><div class="lbl">Pending</div></div>
+        <div class="stat-card stat-card-clickable" onclick="goToMembersFiltered('approved')"><div class="num" id="stat-approved">-</div><div class="lbl">Approved</div></div>
+        <div class="stat-card stat-card-clickable" onclick="showSection('events')"><div class="num" id="stat-events">-</div><div class="lbl">Events</div></div>
       </div>
     </div>
 
@@ -462,12 +464,26 @@ async function confirmReject() {
 }
 
 // ===== MEMBERS =====
+var pendingMemberStatusFilter = null;
+
+function goToMembersFiltered(status) {
+    pendingMemberStatusFilter = status;
+    showSection('members');
+}
+
 async function loadMembers() {
     var r = await api('/api/admin/all-members');
     var el = document.getElementById('members-list');
     if (!r.ok) { el.innerHTML = '<div class="empty">Failed to load members</div>'; return; }
     allMembers = Array.isArray(r.data) ? r.data : (r.data.members || []);
-    renderMembers(allMembers);
+    document.getElementById('member-search').value = '';
+    if (pendingMemberStatusFilter) {
+        var status = pendingMemberStatusFilter;
+        pendingMemberStatusFilter = null;
+        renderMembers(allMembers.filter(function(m) { return m.registration_status === status; }));
+    } else {
+        renderMembers(allMembers);
+    }
 }
 
 function renderMembers(members) {
