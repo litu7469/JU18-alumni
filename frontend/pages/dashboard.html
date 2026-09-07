@@ -52,6 +52,8 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 .stat-card .icon { font-size: 28px; margin-bottom: 8px; }
 .stat-card .value { font-size: 24px; font-weight: 700; color: var(--navy); }
 .stat-card .label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.stat-card-clickable { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.stat-card-clickable:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
 
 /* Profile Form */
 .profile-form { background: var(--white); border-radius: var(--radius); padding: 28px; border: 1px solid var(--border); }
@@ -185,8 +187,8 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
                 <p>Your alumni member dashboard</p>
             </div>
             <div class="cards-grid">
-                <div class="stat-card"><div class="icon">👥</div><div class="value" id="stat-members">—</div><div class="label">Total Members</div></div>
-                <div class="stat-card"><div class="icon">📅</div><div class="value" id="stat-events">—</div><div class="label">Upcoming Events</div></div>
+                <div class="stat-card stat-card-clickable" onclick="showSection('directory')"><div class="icon">👥</div><div class="value" id="stat-members">—</div><div class="label">Total Members</div></div>
+                <div class="stat-card stat-card-clickable" onclick="showSection('events')"><div class="icon">📅</div><div class="value" id="stat-events">—</div><div class="label">Upcoming Events</div></div>
                 <div class="stat-card"><div class="icon">🎓</div><div class="value">18th</div><div class="label">Batch</div></div>
                 <div class="stat-card"><div class="icon">🏛️</div><div class="value">JU</div><div class="label">Jahangirnagar University</div></div>
             </div>
