@@ -56,6 +56,8 @@ def get_profile(db: Session = Depends(get_db), current_user: User = Depends(get_
         "session": member.session,
         "student_id": member.student_id,
         "date_of_birth": str(member.date_of_birth) if member.date_of_birth else None,
+        "blood_group": member.blood_group,
+        "tshirt_size": member.tshirt_size,
         # Contact
         "phone": member.phone,
         "whatsapp": member.whatsapp,
@@ -93,7 +95,7 @@ async def update_profile(request: Request, db: Session = Depends(get_db), curren
         "bio", "batch_roll", "session",
         "linkedin", "facebook",
         "current_location", "current_address", "permanent_address",
-        "date_of_birth", "hall",
+        "date_of_birth", "hall", "blood_group", "tshirt_size",
         "show_in_directory", "show_phone", "show_email"
     ]
     for key, value in data.items():

@@ -31,7 +31,7 @@ def export_members(
     writer = csv.writer(output)
     writer.writerow([
         "SL", "Full Name", "Nick Name", "Email", "Phone", "WhatsApp",
-        "Department", "Hall", "Profession", "Organization",
+        "Department", "Hall", "Blood Group", "T-Shirt Size", "Profession", "Organization",
         "Designation", "Current Location", "Bio",
         "LinkedIn", "Facebook", "Status", "Role",
         "Registration Date"
@@ -46,6 +46,8 @@ def export_members(
             getattr(member, "whatsapp", "") or "",
             getattr(member, "department", "") or "",
             getattr(member, "hall", "") or "",
+            getattr(member, "blood_group", "") or "",
+            getattr(member, "tshirt_size", "") or "",
             getattr(member, "profession", "") or "",
             getattr(member, "organization", "") or "",
             getattr(member, "designation", "") or "",

@@ -54,6 +54,8 @@ class Member(Base):
     session           = Column(String, nullable=True)
     student_id        = Column(String, nullable=True)
     date_of_birth     = Column(Date, nullable=True)
+    blood_group       = Column(String, nullable=True)
+    tshirt_size       = Column(String, nullable=True)
 
     # Contact
     phone             = Column(String, nullable=True)

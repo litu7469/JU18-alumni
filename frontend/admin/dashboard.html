@@ -73,6 +73,38 @@ input:focus, select:focus, textarea:focus { border-color: #1a3a5c; }
 .modal h3 { color: #1a3a5c; margin-bottom: 20px; font-size: 17px; }
 .empty { text-align: center; padding: 40px; color: #95a5a6; font-size: 14px; }
 #admin-hidden { display: none; }
+
+/* ── Mobile Responsive ─────────────────────────────────────── */
+@media (max-width: 860px) {
+  .header { padding: 8px 14px; height: auto; flex-wrap: wrap; gap: 6px; }
+  .header h1 { font-size: 14px; }
+  .header p { font-size: 10px; }
+  #admin-name { display: none; }
+  .btn-sm { padding: 6px 10px; font-size: 12px; }
+
+  .layout { display: block; }
+  .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e8ecf0; padding: 6px 8px; display: flex; align-items: center; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 2px; }
+  .sidebar-label, hr.divider { display: none; }
+  .menu-item { flex-shrink: 0; white-space: nowrap; border-left: none !important; border-radius: 8px; padding: 8px 12px; font-size: 12px; }
+  .menu-item.active { background: #eaf0f8; }
+
+  .main { padding: 14px; }
+  .section-title { font-size: 17px; margin-bottom: 14px; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 14px; }
+  .stat-card .num { font-size: 24px; }
+
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+
+  .card-header { flex-wrap: wrap; gap: 8px; }
+  .card-header input[type="text"] { width: 100% !important; }
+
+  .card { overflow-x: auto; }
+  .card table { min-width: 560px; }
+
+  .modal { padding: 18px; width: 94%; }
+}
 </style>
 </head>
 <body>

@@ -121,6 +121,50 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 }
 .toast.success { background: #27ae60; }
 .toast.error   { background: #e74c3c; }
+
+/* ── Mobile Responsive ─────────────────────────────────────── */
+@media (max-width: 860px) {
+    .header { padding: 0 14px; height: auto; min-height: 56px; flex-wrap: wrap; gap: 8px; padding-top: 8px; padding-bottom: 8px; }
+    .header-logo .logo-text p { display: none; }
+    .header-logo .logo-text h1 { font-size: 14px; }
+    .nav-links { display: none; }
+    #header-username { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .layout { display: block; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); padding: 0; }
+    .profile-card { padding: 14px; display: flex; align-items: center; gap: 12px; text-align: left; border-bottom: none; }
+    .profile-avatar { width: 48px; height: 48px; font-size: 20px; margin: 0; flex-shrink: 0; }
+    .profile-name { font-size: 14px; }
+    .profile-dept { font-size: 11px; }
+    .profile-status { margin-top: 4px; font-size: 10px; padding: 2px 8px; }
+
+    .sidebar-menu { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 4px 10px 10px; gap: 4px; border-top: 1px solid var(--border); }
+    .menu-item { flex-direction: column; gap: 2px; width: auto; flex-shrink: 0; padding: 8px 12px; font-size: 11px; text-align: center; border-radius: 8px; border-left: none !important; white-space: nowrap; }
+    .menu-item.active { border-left: none; background: #e8f0f8; }
+    .menu-icon { font-size: 16px; }
+    #admin-panel-link { border-top: none !important; margin-top: 0 !important; padding-top: 0 !important; }
+
+    .content { padding: 16px; }
+    .section-header h2 { font-size: 18px; }
+
+    .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 14px; }
+    .stat-card .value { font-size: 19px; }
+
+    .profile-form { padding: 18px; }
+    .form-group { grid-template-columns: 1fr; gap: 0; }
+
+    .search-bar { flex-direction: column; }
+    .search-bar input, .search-bar select { width: 100%; }
+
+    .member-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+
+@media (max-width: 420px) {
+    .cards-grid { grid-template-columns: 1fr 1fr; }
+    .profile-card { flex-wrap: wrap; }
+    .toast { left: 16px; right: 16px; max-width: none; }
+}
 </style>
 </head>
 <body>
@@ -239,6 +283,31 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
                     <div class="field"><label>Permanent Address</label><textarea id="p-permanent_address" rows="2" placeholder="Your permanent home address" style="width:100%;padding:10px;border:1.5px solid #dde3ea;border-radius:6px;font-family:inherit;font-size:14px;resize:vertical;"></textarea></div>
                 </div>
                 <div class="form-group">
+                    <div class="field"><label>Blood Group</label>
+                        <select id="p-blood_group" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;outline:none;background:white;">
+                            <option value="">— Select —</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div class="field"><label>T-Shirt Size</label>
+                        <select id="p-tshirt_size" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;outline:none;background:white;">
+                            <option value="">— Select —</option>
+                            <option value="XS">XS</option>
+                            <option value="S">S</option>
+                            <option value="M">M</option>
+                            <option value="L">L</option>
+                            <option value="XL">XL</option>
+                            <option value="XXL">XXL</option>
+                            <option value="3XL">3XL</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="field-section-title">🎓 Academic Information</div>
@@ -509,7 +578,7 @@ async function init() {
 async function loadProfile() {
     const p = await apiGet('/api/members/profile');
     if (!p) return;
-    ['full_name','nick_name','email','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address','batch_roll','session','hall'].forEach(f => {
+    ['full_name','nick_name','email','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address','batch_roll','session','hall','blood_group','tshirt_size'].forEach(f => {
         const el = document.getElementById(`p-${f}`);
         if (el) {
             const val = p[f];
@@ -538,7 +607,7 @@ async function loadProfile() {
 }
 async function saveProfile() {
     const data = {};
-    ['full_name','nick_name','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address','batch_roll','session','hall'].forEach(f => {
+    ['full_name','nick_name','phone','whatsapp','profession','organization','designation','linkedin','facebook','current_location','bio','date_of_birth','department','current_address','permanent_address','batch_roll','session','hall','blood_group','tshirt_size'].forEach(f => {
         const el = document.getElementById(`p-${f}`);
         if (el && el.value.trim() !== '') data[f] = el.value.trim();
     });

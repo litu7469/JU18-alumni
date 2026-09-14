@@ -54,6 +54,8 @@ class MemberProfileUpdate(BaseModel):
     whatsapp: Optional[str] = None
     current_address: Optional[str] = None
     permanent_address: Optional[str] = None
+    blood_group: Optional[str] = None
+    tshirt_size: Optional[str] = None
     profession: Optional[str] = None
     organization: Optional[str] = None
     designation: Optional[str] = None
