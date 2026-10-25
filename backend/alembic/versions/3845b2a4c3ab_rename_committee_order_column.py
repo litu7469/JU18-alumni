@@ -8,16 +8,16 @@ the change. This was causing the public /api/public/homepage endpoint
 to 500 on every request, since its committee-members query reads
 CommitteeMember.display_order.
 
-Revision ID: a1b2c3d4e5f6
+Revision ID: 3845b2a4c3ab
 Revises: f1a2b3c4d5e6
-Create Date: 2026-10-26 02:00:00.000000
+Create Date: 2026-10-26 02:30:00.000000
 
 """
 from alembic import op
 import sqlalchemy as sa
 
 
-revision = 'a1b2c3d4e5f6'
+revision = '3845b2a4c3ab'
 down_revision = 'f1a2b3c4d5e6'
 branch_labels = None
 depends_on = None
