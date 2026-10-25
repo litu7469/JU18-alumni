@@ -40,24 +40,12 @@ def get_homepage_data(db: Session = Depends(get_db)):
         SliderImage.is_active == True
     ).order_by(SliderImage.display_order).all()
 
-    # Latest 3 events — upcoming first, then recent past ones if fewer than 3 upcoming
-    upcoming_events = db.query(Event).filter(
+    # Upcoming events only — a past event drops off the homepage automatically
+    # the moment its date passes, with no backfill from old events.
+    events = db.query(Event).filter(
         Event.is_published == True,
         Event.event_date >= datetime.utcnow()
-    ).order_by(Event.event_date.asc()).limit(3).all()
-
-    # If fewer than 3 upcoming, fill with most recent past events
-    if len(upcoming_events) < 3:
-        needed = 3 - len(upcoming_events)
-        upcoming_ids = [e.id for e in upcoming_events]
-        past_events = db.query(Event).filter(
-            Event.is_published == True,
-            Event.event_date < datetime.utcnow(),
-            ~Event.id.in_(upcoming_ids) if upcoming_ids else True
-        ).order_by(Event.event_date.desc()).limit(needed).all()
-        events = upcoming_events + past_events
-    else:
-        events = upcoming_events
+    ).order_by(Event.event_date.asc()).limit(5).all()
 
     # Announcements
     announcements = db.query(Announcement).filter(
@@ -98,7 +86,8 @@ def get_homepage_data(db: Session = Depends(get_db)):
                 "event_date": str(e.event_date) if e.event_date else None,
                 "location": e.location,
                 "image": e.image,
-                "is_upcoming": e.event_date >= datetime.utcnow().date() if e.event_date else False,
+                "registration_required": e.registration_required,
+                "is_upcoming": True,
             } for e in events
         ],
         "announcements": [

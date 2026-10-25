@@ -457,6 +457,7 @@ body { font-family: 'Source Sans 3', sans-serif; background: var(--light); color
 <script>
 const API_BASE = 'https://ju18-alumni-production.up.railway.app';
 let searchTimeout;
+let deepLinkEventId = new URLSearchParams(window.location.search).get('event');
 
 // ── Token helpers ──────────────────────────────────────────
 function getToken() { return localStorage.getItem('access_token'); }
@@ -700,7 +701,7 @@ async function loadEvents() {
         const d = new Date(e.event_date);
         const isPast = d < new Date();
         const going = !!e.user_rsvpd;
-        return `<div style="background:white;border-radius:12px;border:1px solid var(--border);margin-bottom:16px;overflow:hidden;">
+        return `<div id="event-row-${e.id}" style="background:white;border-radius:12px;border:1px solid var(--border);margin-bottom:16px;overflow:hidden;transition:box-shadow 0.3s;">
             <div style="display:flex;gap:0;align-items:stretch;">
                 <div style="min-width:70px;text-align:center;background:${isPast ? '#95a5a6' : 'var(--navy)'};color:white;padding:16px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
                     <div style="font-size:24px;font-weight:700;line-height:1;">${d.getDate()}</div>
@@ -743,6 +744,20 @@ async function loadEvents() {
             </div>
         </div>`;
     }).join('');
+
+    // Deep link from the homepage "Register" button: jump to that event and
+    // open its RSVP panel. Only acts once per page load.
+    if (deepLinkEventId) {
+        const target = document.getElementById(`event-row-${deepLinkEventId}`);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            target.style.boxShadow = '0 0 0 3px #ffd452, 0 4px 16px rgba(0,0,0,0.15)';
+            setTimeout(() => { target.style.boxShadow = ''; }, 4000);
+            const panel = document.getElementById(`rsvp-panel-${deepLinkEventId}`);
+            if (panel) panel.style.display = 'block';
+        }
+        deepLinkEventId = null;
+    }
 }
 
 function toggleRSVPPanel(eventId) {
@@ -792,6 +807,7 @@ async function changePassword() {
 }
 
 init();
+if (deepLinkEventId) { showSection('events'); }
 
 function previewPhoto(input, slot) {
     if (!input.files || !input.files[0]) return;

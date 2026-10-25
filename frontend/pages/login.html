@@ -92,9 +92,15 @@ var params = new URLSearchParams(window.location.search);
 if (params.get('verified') === 'true') {
     document.getElementById('verified-banner').style.display = 'block';
 }
+var redirectParam = params.get('redirect');
+var eventIdParam = params.get('eventId');
 
 if (localStorage.getItem('access_token')) {
-    window.location.href = API_BASE + '/admin/dashboard.html';
+    if (redirectParam === 'event' && eventIdParam) {
+        window.location.href = API_BASE + '/pages/dashboard.html?event=' + eventIdParam;
+    } else {
+        window.location.href = API_BASE + '/admin/dashboard.html';
+    }
 }
 
 function doLogin() {
@@ -133,7 +139,9 @@ function doLogin() {
             if (role === 'admin' || role === 'super_admin') {
                 window.location.href = API_BASE + '/admin/dashboard.html';
             } else if (status === 'approved') {
-                window.location.href = API_BASE + '/pages/dashboard.html';
+                window.location.href = (redirectParam === 'event' && eventIdParam)
+                    ? API_BASE + '/pages/dashboard.html?event=' + eventIdParam
+                    : API_BASE + '/pages/dashboard.html';
             } else {
                 window.location.href = API_BASE + '/pages/pending.html';
             }

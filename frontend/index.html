@@ -828,10 +828,10 @@ function renderEvents(events) {
         var desc = e.description
             ? (e.description.length > 100 ? e.description.substring(0, 100) + "..." : e.description)
             : "Join us for this alumni event.";
-        var isUpcoming = e.is_upcoming;
-        var badge = isUpcoming
-            ? '<span style="background:#27ae60;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;">UPCOMING</span>'
-            : '<span style="background:#95a5a6;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;">RECENT</span>';
+        var badge = '<span style="background:#27ae60;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;">UPCOMING</span>';
+        var registerLink = e.registration_required
+            ? '<a href="#" onclick="goToEventRegister(event,' + e.id + ')" style="display:inline-block;margin-top:10px;padding:7px 16px;background:linear-gradient(135deg,#ffd452,#ff9f43);color:#1a3a5c;border-radius:7px;font-size:13px;font-weight:800;text-decoration:none;">Register →</a>'
+            : '';
         return [
             '<div class="event-card">',
             '  <div class="event-date">',
@@ -842,10 +842,23 @@ function renderEvents(events) {
             '    <h4>' + (e.title || "Alumni Event") + ' ' + badge + '</h4>',
             '    <p>' + desc + '</p>',
             '    ' + (e.location ? '<p style="font-size:12px;color:#7f8c8d;margin-top:4px;">📍 ' + e.location + '</p>' : ''),
+            '    ' + registerLink,
             '  </div>',
             '</div>'
         ].join('\n');
     }).join('');
+}
+
+// Clicking Register on a homepage event sends a signed-in member straight to
+// that event's RSVP panel, or an anonymous visitor through login first.
+function goToEventRegister(e, eventId) {
+    e.preventDefault();
+    var token = localStorage.getItem('access_token');
+    if (token) {
+        window.location.href = API + '/pages/dashboard.html?event=' + eventId;
+    } else {
+        window.location.href = API + '/pages/login.html?redirect=event&eventId=' + eventId;
+    }
 }
 
 fetch(API + "/api/public/homepage")
