@@ -118,6 +118,7 @@ class EventRegistration(Base):
     id            = Column(Integer, primary_key=True, index=True)
     event_id      = Column(Integer, ForeignKey("events.id"))
     user_id       = Column(Integer, ForeignKey("users.id"))
+    comment       = Column(Text, nullable=True)
     registered_at = Column(DateTime, server_default=func.now())
 
     event = relationship("Event", back_populates="registrations")

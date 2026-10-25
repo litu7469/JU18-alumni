@@ -39,20 +39,27 @@ class EventUpdate(BaseModel):
     registration_fee: Optional[float] = None
 
 
+class RSVPRequest(BaseModel):
+    comment: Optional[str] = None
+
+
 # ── Helper ─────────────────────────────────────────────────────────────────
 
 def format_event(e, db, current_user_id=None):
     rsvp_count = 0
     user_rsvpd = False
+    user_comment = None
     try:
         rsvp_count = db.query(EventRegistration).filter(
             EventRegistration.event_id == e.id
         ).count()
         if current_user_id:
-            user_rsvpd = db.query(EventRegistration).filter(
+            my_rsvp = db.query(EventRegistration).filter(
                 EventRegistration.event_id == e.id,
                 EventRegistration.user_id == current_user_id
-            ).first() is not None
+            ).first()
+            user_rsvpd = my_rsvp is not None
+            user_comment = my_rsvp.comment if my_rsvp else None
     except Exception as ex:
         logger.error(f"Error fetching RSVP info for event {e.id}: {ex}")
 
@@ -73,6 +80,7 @@ def format_event(e, db, current_user_id=None):
         "created_at": str(e.created_at) if e.created_at else None,
         "rsvp_count": rsvp_count,
         "user_rsvpd": user_rsvpd,
+        "user_comment": user_comment,
     }
 
 
@@ -188,6 +196,7 @@ def get_attendees(
             "department": member.department if member else None,
             "phone": member.phone if member else None,
             "rsvp_date": str(r.registered_at) if r.registered_at else "",
+            "comment": r.comment,
         })
     return result
 
@@ -220,6 +229,7 @@ def get_event(
 @router.post("/{event_id}/rsvp")
 def toggle_rsvp(
     event_id: int,
+    data: RSVPRequest = RSVPRequest(),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_approved_member)
 ):
@@ -237,10 +247,13 @@ def toggle_rsvp(
         EventRegistration.user_id == current_user.id
     ).first()
 
+    comment = (data.comment or "").strip() or None
+
     if existing:
+        # Unregistering — the comment, if any, is kept as the cancellation note.
         db.delete(existing)
         db.commit()
-        return {"message": "RSVP cancelled", "rsvpd": False}
+        return {"message": "RSVP cancelled", "rsvpd": False, "comment": comment}
 
     # Check capacity
     if e.max_attendees:
@@ -250,7 +263,8 @@ def toggle_rsvp(
         if count >= e.max_attendees:
             raise HTTPException(status_code=400, detail="Event is full")
 
-    rsvp = EventRegistration(event_id=event_id, user_id=current_user.id)
+    # Free events need no payment formalities — RSVP confirms immediately either way.
+    rsvp = EventRegistration(event_id=event_id, user_id=current_user.id, comment=comment)
     db.add(rsvp)
     db.commit()
-    return {"message": "RSVP confirmed", "rsvpd": True}
+    return {"message": "RSVP confirmed", "rsvpd": True, "comment": comment}

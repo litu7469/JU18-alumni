@@ -684,6 +684,10 @@ function searchDirectory() {
     searchTimeout = setTimeout(loadDirectory, 400);
 }
 
+function escapeAttr(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 async function loadEvents() {
     const list = document.getElementById('events-list');
     list.innerHTML = '<div class="loading">Loading events...</div>';
@@ -695,6 +699,7 @@ async function loadEvents() {
     list.innerHTML = data.map(e => {
         const d = new Date(e.event_date);
         const isPast = d < new Date();
+        const going = !!e.user_rsvpd;
         return `<div style="background:white;border-radius:12px;border:1px solid var(--border);margin-bottom:16px;overflow:hidden;">
             <div style="display:flex;gap:0;align-items:stretch;">
                 <div style="min-width:70px;text-align:center;background:${isPast ? '#95a5a6' : 'var(--navy)'};color:white;padding:16px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
@@ -715,11 +720,16 @@ async function loadEvents() {
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;">
                             <span style="font-size:12px;color:var(--muted);">👥 ${e.rsvp_count} attending</span>
-                            ${e.is_rsvp_enabled && !isPast ? `<button id="rsvp-btn-${e.id}" onclick="toggleRSVP(${e.id})" style="padding:6px 14px;background:${e.user_rsvpd ? '#e8f5e9' : 'var(--gold)'};color:${e.user_rsvpd ? '#27ae60' : '#1a3a5c'};border:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;">${e.user_rsvpd ? '✅ Going' : '+ RSVP'}</button>` : ''}
                             ${isPast ? '<span style="font-size:11px;color:#95a5a6;background:#f0f0f0;padding:4px 10px;border-radius:10px;">Past</span>' : ''}
                         </div>
                     </div>
                     ${e.description ? `<div style="font-size:13px;margin-top:10px;color:var(--text);line-height:1.5;">${e.description}</div>` : ''}
+                    ${e.is_rsvp_enabled && !isPast ? `
+                    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                        <button id="rsvp-btn-${e.id}" onclick="toggleRSVP(${e.id})" style="padding:6px 14px;background:${going ? '#fdecea' : 'var(--gold)'};color:${going ? '#c0392b' : '#1a3a5c'};border:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">${going ? 'Unregister Event' : 'Register Event'}</button>
+                        <span id="rsvp-status-${e.id}" style="margin-left:8px;font-size:12px;font-weight:700;color:${going ? '#27ae60' : 'var(--muted)'};">Status: ${going ? 'Going' : 'Not Going'}</span>
+                        <input id="rsvp-note-${e.id}" type="text" maxlength="200" placeholder="Comment/Note (optional)" value="${escapeAttr(e.user_comment)}" style="flex:1;min-width:160px;margin-left:auto;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;">
+                    </div>` : ''}
                 </div>
             </div>
         </div>`;
@@ -728,17 +738,22 @@ async function loadEvents() {
 
 async function toggleRSVP(eventId) {
     const btn = document.getElementById(`rsvp-btn-${eventId}`);
+    const statusEl = document.getElementById(`rsvp-status-${eventId}`);
+    const noteEl = document.getElementById(`rsvp-note-${eventId}`);
+    const comment = noteEl ? noteEl.value.trim() : '';
+    const wasGoing = statusEl ? statusEl.textContent.trim() === 'Status: Going' : false;
     if (btn) { btn.disabled = true; btn.textContent = '...'; }
     const res = await fetch(`${API_BASE}/api/events/${eventId}/rsvp`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${getToken()}` }
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+        body: JSON.stringify({ comment: comment || null })
     });
     const data = await res.json();
     if (res.ok) {
         loadEvents();
     } else {
         alert(data.detail || 'RSVP failed');
-        if (btn) { btn.disabled = false; btn.textContent = '+ RSVP'; }
+        if (btn) { btn.disabled = false; btn.textContent = wasGoing ? 'Unregister Event' : 'Register Event'; }
     }
 }
 
