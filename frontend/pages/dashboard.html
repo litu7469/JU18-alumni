@@ -725,10 +725,19 @@ async function loadEvents() {
                     </div>
                     ${e.description ? `<div style="font-size:13px;margin-top:10px;color:var(--text);line-height:1.5;">${e.description}</div>` : ''}
                     ${e.is_rsvp_enabled && !isPast ? `
-                    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-                        <button id="rsvp-btn-${e.id}" onclick="toggleRSVP(${e.id})" style="padding:6px 14px;background:${going ? '#fdecea' : 'var(--gold)'};color:${going ? '#c0392b' : '#1a3a5c'};border:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">${going ? 'Unregister Event' : 'Register Event'}</button>
-                        <span id="rsvp-status-${e.id}" style="margin-left:8px;font-size:12px;font-weight:700;color:${going ? '#27ae60' : 'var(--muted)'};">Status: ${going ? 'Going' : 'Not Going'}</span>
-                        <input id="rsvp-note-${e.id}" type="text" maxlength="200" placeholder="Comment/Note (optional)" value="${escapeAttr(e.user_comment)}" style="flex:1;min-width:160px;margin-left:auto;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;">
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px;">
+                            <button id="rsvp-btn-${e.id}" onclick="toggleRSVPPanel(${e.id})" style="padding:9px 20px;background:${going ? 'linear-gradient(135deg,#ff6b6b,#e0245e)' : 'linear-gradient(135deg,#ffd452,#ff9f43)'};color:${going ? '#ffffff' : '#1a3a5c'};border:none;border-radius:8px;font-family:inherit;font-size:15px;font-weight:800;letter-spacing:0.3px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.18);">${going ? '✖ Unregister Event' : '✓ Register Event'}</button>
+                            <span id="rsvp-status-${e.id}" style="font-size:15px;font-weight:800;letter-spacing:0.3px;color:${going ? '#1e8e3e' : '#e04343'};">Status: ${going ? '🟢 Going' : '🔴 Not Going'}</span>
+                        </div>
+                        <div id="rsvp-panel-${e.id}" style="display:none;margin-top:12px;background:linear-gradient(135deg,#f4f8ff,#fff7ec);border:1px solid var(--border);border-radius:10px;padding:14px;">
+                            <label style="display:block;font-size:13px;font-weight:800;color:#8a2be2;margin-bottom:6px;">💬 Comment / Note <span style="font-weight:600;color:var(--muted);">(optional)</span></label>
+                            <input id="rsvp-note-${e.id}" type="text" maxlength="200" placeholder="Add a comment or note..." value="${escapeAttr(e.user_comment)}" style="width:100%;padding:9px 12px;border:1.5px solid #c9b8f5;border-radius:7px;font-family:inherit;font-size:14px;box-sizing:border-box;">
+                            <div style="display:flex;gap:10px;margin-top:12px;">
+                                <button id="rsvp-submit-${e.id}" onclick="submitRSVP(${e.id})" style="padding:8px 20px;background:linear-gradient(135deg,#1a3a5c,#2e6fb8);color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:14px;font-weight:800;letter-spacing:0.3px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.15);">Submit</button>
+                                <button onclick="toggleRSVPPanel(${e.id})" style="padding:8px 18px;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">Cancel</button>
+                            </div>
+                        </div>
                     </div>` : ''}
                 </div>
             </div>
@@ -736,13 +745,18 @@ async function loadEvents() {
     }).join('');
 }
 
-async function toggleRSVP(eventId) {
-    const btn = document.getElementById(`rsvp-btn-${eventId}`);
-    const statusEl = document.getElementById(`rsvp-status-${eventId}`);
+function toggleRSVPPanel(eventId) {
+    const panel = document.getElementById(`rsvp-panel-${eventId}`);
+    if (!panel) return;
+    panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
+}
+
+async function submitRSVP(eventId) {
+    const submitBtn = document.getElementById(`rsvp-submit-${eventId}`);
     const noteEl = document.getElementById(`rsvp-note-${eventId}`);
     const comment = noteEl ? noteEl.value.trim() : '';
-    const wasGoing = statusEl ? statusEl.textContent.trim() === 'Status: Going' : false;
-    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+    const submitLabel = submitBtn ? submitBtn.textContent : 'Submit';
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '...'; }
     const res = await fetch(`${API_BASE}/api/events/${eventId}/rsvp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
@@ -753,7 +767,7 @@ async function toggleRSVP(eventId) {
         loadEvents();
     } else {
         alert(data.detail || 'RSVP failed');
-        if (btn) { btn.disabled = false; btn.textContent = wasGoing ? 'Unregister Event' : 'Register Event'; }
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = submitLabel; }
     }
 }
 
